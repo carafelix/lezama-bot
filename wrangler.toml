@@ -2,3 +2,6 @@ name = "lezama"
 main = "src/router.ts"
 compatibility_date = "2024-04-14"
 workers_dev = true
+
+[dev]
+port = 8080
