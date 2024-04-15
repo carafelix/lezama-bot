@@ -1,11 +1,13 @@
 import { Bot } from "grammy"
-import { BOT_TOKEN } from './_env.json'
+import { Env } from "hono"
 
-const bot = new Bot(BOT_TOKEN)
+function getBot(env : Env){
+    const bot = new Bot(env.BOT_TOKEN)
+    bot.command('start',c => c)
+    bot.on('message', c => c.react("🏆"))
+    bot.catch((err)=> console.trace(err))
 
-bot.command('start',c => c)
-bot.on('message', c => c.react("🏆"))
+    return bot
+}
 
-bot.catch((err)=> console.trace(err))
-
-export default bot
+export default getBot

@@ -5,9 +5,8 @@
   "scripts": {
     "deploy": "wrangler deploy",
     "dev": "concurrently \"gnome-terminal --tab -- ngrok http 8080\" \"wrangler dev\" \"sleep 5 && npm run updateWebhook\"",
-    "updateWebhook": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(jq -r \".BOT_TOKEN\" ./src/_env.json); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}/api/telegram/webhook'",
-    "start": "wrangler dev",
-    "testt": "echo $npm_BOT_TOKEN"
+    "updateWebhook": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(jq -r \".BOT_TOKEN\" ./_env.json); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}/api/telegram/webhook'",
+    "start": "wrangler dev"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
