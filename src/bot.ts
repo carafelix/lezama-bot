@@ -1,31 +1,26 @@
-import { Env } from 'hono'; // edited type in the declaration
 import {
-    Bot, InlineKeyboard,
+    Bot, webhookCallback, InlineKeyboard,
     type CommandContext, Context,
     CallbackQueryContext,
     NextFunction,
 } from 'grammy';
 import { ParseMode } from 'grammy/types';
 
-const mainMenuText =
-    `veet\n\n`
-
-const mainMenuMarkup = new InlineKeyboard()
-    .text('Suscribe', 'Suscribe')
-    .text('Settings', 'Settings');
+addEventListener("fetch",webhookCallback(getBot(), "cloudflare"));
 
 
-
-function getBot(env: Env) {
-    const bot = new Bot(env.BOT_TOKEN)
+function getBot() {
+    // @ts-ignore
+    const bot = new Bot(BOT_TOKEN, {botInfo: JSON.parse(BOT_INFO)})
 
     bot.command('start', async c => landingMessage(c))
     bot.command('pause', async c => pauseDaily(c))
     bot.command('help', async c => c.reply('all commands listed'))
 
-    bot.callbackQuery('Suscribe', async (c, next) => suscribeMenu(c, 'action/findOne', env.MONGO_KEY, env.MONGO_ENDPOINT, next))
+    bot.callbackQuery('Suscribe', async (c, next) => suscribeMenu(c,next))
     bot.callbackQuery('SuscribeOk', async c => subscribeAtHour())
     bot.callbackQuery('Settings', async c => settingsMenu(c))
+
     bot.callbackQuery('Back', async c => {
         await c.editMessageText(mainMenuText, getMessageOptsObj(mainMenuMarkup));
     })
@@ -37,6 +32,13 @@ function getBot(env: Env) {
 
     return bot
 }
+
+const mainMenuText =
+    `veet\n\n`
+
+const mainMenuMarkup = new InlineKeyboard()
+    .text('Suscribe', 'Suscribe')
+    .text('Settings', 'Settings');
 
 async function landingMessage(c: CommandContext<Context>) {
 
@@ -51,29 +53,29 @@ Description`
 }
 
 
-async function suscribeMenu(c : CallbackQueryContext<Context>, action : string, MONGO_KEY : string, MONGO_ENDPOINT : string, next : NextFunction) {
+async function suscribeMenu(c : CallbackQueryContext<Context>, next : NextFunction) {
     
 
-    var data = JSON.stringify({
-        "collection": "poems",
-        "database": "lezama",
-        "dataSource": "Lezama",
-        "projection": {
-            "title": 1
-        }
-    });
+    // const data = JSON.stringify({
+    //     "collection": "poems",
+    //     "database": "lezama",
+    //     "dataSource": "Lezama",
+    //     "projection": {
+    //         "title": 1
+    //     }
+    // });
 
-    const v = await fetch(MONGO_ENDPOINT + action, {
-        method: 'post',
-        headers: {
-            'Content-Type': 'application/json',
-            'Access-Control-Request-Headers': '*',
-            'api-key': MONGO_KEY,
-            },
-        body: data
-        } as RequestInit)
+    // const v = await fetch(MONGO_ENDPOINT + action, {
+    //     method: 'post',
+    //     headers: {
+    //         'Content-Type': 'application/json',
+    //         'Access-Control-Request-Headers': '*',
+    //         'api-key': MONGO_KEY,
+    //         },
+    //     body: data
+    //     } as RequestInit)
     
-    const da = await v.json()
+    // const da = await v.json()
 
     const suscribeMenuText = 
 `<b>Press the Select Hour</b>
@@ -121,4 +123,3 @@ function getMessageOptsObj(markup: InlineKeyboard) {
 }
 
 
-export default getBot
