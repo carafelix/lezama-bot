@@ -5,6 +5,8 @@ interface Env {
   MONGO_API_KEY: string
   MONGO_API_ENDPOINT: string
   MONGO_APP_ID: string
+  FREE_STORAGE_TOKEN: string
+  FREE_STORAGE_SECRET_KEY: string
 }
 
 interface MongoResponse {
@@ -28,7 +30,17 @@ interface BookDocument {
 
 interface SessionData {
   chatID: number,
+  suscribed: boolean,
+  allPoems: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
   visited: PoemDocument["_id"][],
 }
 
+type ExportedMenu = {
+  menu: Menu<Lezama>;
+  text: string;
+}
+
+interface AdminData {
+  users: any
+}

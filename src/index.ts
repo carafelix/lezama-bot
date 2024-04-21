@@ -1,5 +1,8 @@
 import { webhookCallback } from 'grammy';
 import getBot from './bot';
+import { freeStorage } from '@grammyjs/storage-free';
+import { composedFetch } from './lib/database/mongo';
+import { formatPoems } from './utils/format-poems';
 
 export default {
 
@@ -18,10 +21,28 @@ export default {
   },
   async scheduled(e: ScheduledController, env: Env, c: ExecutionContext) {
     switch (e.cron) {
-      case "1 * * * *":
+      case "30 9 * * *":
         const bot = await getBot(env)
-        await bot.api.sendMessage(-4196751149, 'cronjob1')
-      break;
+        const users = (await freeStorage<AdminData>(bot.token).read(env.FREE_STORAGE_SECRET_KEY)).users
+
+        for (const user in users) {
+          try {
+            const userSession = await freeStorage<SessionData>(bot.token).read(user)
+            const poemID = userSession.queue[0]
+            const poem = await composedFetch(env,'short-poems', 'findOne', {
+              filter: {
+                "_id": poemID
+              }
+            }) as MongoResponse
+
+            await bot.api.sendMessage(user,formatPoems(poem.document))
+          }
+          catch (err) {
+            console.log(err);
+          }
+        }
+
+        break;
     }
     return
   }

@@ -1,51 +1,41 @@
 import { Menu } from "@grammyjs/menu";
-import { CommandContext, Context, NextFunction, CallbackQueryContext, InlineKeyboard } from "grammy";
+import { Lezama } from "./bot";
+import { handleSuscribeStatus } from "./handlers";
 
-export async function landingMessage(c: CommandContext<Context>, next : NextFunction) {
-    const landingMsg = 
-`<b>Lezama - Custom Daily Messages</b>
+const landingText =
+    `<b>Lezama - Custom Daily Messages</b>
 
 Description`
-    await c.reply(landingMsg, { parse_mode: "HTML"} );
-    next()
-}
 
-const mainText = `veet\n\n`;
-const main = new Menu('mainMenu')
-            .submenu('Subscribe!', 'subscribe-menu')
-            .submenu('Settings', 'settings-menu')
-
-
-const subscribeText = `subscribe\n\n`;
-const subscribe = new Menu('subscribe-menu')
-            .back('Back')
-            .text('papi')
-
+const landing = new Menu<Lezama>('landing-menu')
+    .text(
+        (c) => c.session.suscribed ? 'Pause' : 'Subscribe!',
+        handleSuscribeStatus
+    )
 
 const settingsText = `settings\n\n`;
-const settings = new Menu('settings-menu')
-            .back('Back')
-            .text('mami')
+const settings = new Menu<Lezama>('settings-menu')
+    .back('Back')
+    .text('mami')
 
 
 const selectSubscribeHourText = `Please select the hour for recieve your daily message`
-const selectSubscribeHour = new Menu('select-suscribe-hour-menu')
-            .back('Back')
+const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
+    .back('Back')
 
-main.register(settings);
-main.register(subscribe);
-subscribe.register(selectSubscribeHour)
 
-export const mainMenu = {
-    menu: main,
-    text: mainText
-}
-export const subscribeMenu = {
-    menu: subscribe,
-    text: subscribeText
-}
+settings.register(selectSubscribeHour)
+
 export const settingsMenu = {
     menu: settings,
     text: settingsText
 }
+
+export const landingMenu = {
+    menu: landing,
+    text: landingText,
+}
+
+
+export const menus = [landingMenu, settingsMenu]
 
