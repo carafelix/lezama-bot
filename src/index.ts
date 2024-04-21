@@ -3,6 +3,7 @@ import getBot from './bot';
 import { freeStorage } from '@grammyjs/storage-free';
 import { composedFetch } from './lib/database/mongo';
 import { formatPoems } from './utils/format-poems';
+import { shuffleArray } from './utils/shuffle-arr';
 
 export default {
 
@@ -28,14 +29,19 @@ export default {
         for (const user in users) {
           try {
             const userSession = await freeStorage<SessionData>(bot.token).read(user)
-            const poemID = userSession.queue[0]
+            console.log(userSession)
+            let poemID = userSession.queue.shift()
+            if(!poemID){
+              userSession.queue = shuffleArray(userSession.allPoems.slice())
+              poemID = userSession.queue.shift()
+            }
             const poem = await composedFetch(env,'short-poems', 'findOne', {
               filter: {
                 "_id": poemID
               }
             }) as MongoResponse
-
             await bot.api.sendMessage(user,formatPoems(poem.document))
+            await freeStorage<SessionData>(bot.token).write(user,userSession)
           }
           catch (err) {
             console.log(err);
