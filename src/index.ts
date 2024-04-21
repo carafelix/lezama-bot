@@ -8,7 +8,7 @@ import { shuffleArray } from './utils/shuffle-arr';
 export default {
 
   async fetch(req: Request, env: Env, c: ExecutionContext) {
-    let response = new Response('Bot initialization failed')
+    let response = new Response('Bot initialization failed or... who are you?')
 
     try {
       const bot = await getBot(env)
