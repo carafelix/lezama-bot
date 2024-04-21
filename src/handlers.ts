@@ -1,8 +1,9 @@
+import { freeStorage } from '@grammyjs/storage-free';
 import shortiesIDs from './data/shorties.json'
 import { shuffleArray } from './utils/utils';
 
-export function handleSuscribeStatus(c: { session: { suscribed: boolean; queue: string | any[]; }; menu: { update: () => void; }; answerCallbackQuery: (arg0: string) => void; }) {
-
+export function handleSuscribeStatus(c : any) {
+    
     c.session.suscribed = !c.session.suscribed
 
     if (!c.session.queue.length) {

@@ -34,7 +34,6 @@ async function getBot(env: Env) {
   }));
 
 
-
   // Register menus
   menus.forEach(menu => bot.use(menu.menu))
 
@@ -44,14 +43,6 @@ async function getBot(env: Env) {
     if (!c.session.chatID) c.session.chatID = c.chat.id;
     if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
     await replyWithMenu(c, landingMenu)
-
-    const users = (await freeStorage<AdminData>(bot.token).read(env.FREE_STORAGE_SECRET_KEY)).users
-    if(!users[`${c.chat.id}`]){
-      users[`${c.chat.id}`] = `${c.chat.id}`
-      await freeStorage<AdminData>(bot.token).write(env.FREE_STORAGE_SECRET_KEY,
-        {users: users}
-      )
-    }
   })
   bot.command('help', async c => await c.reply(`chatID: ${c.chat.id}; list all commands`))    
   bot.command('settings', async (c) => await replyWithMenu(c, settingsMenu))

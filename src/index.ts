@@ -29,7 +29,9 @@ export default {
         for (const user in users) {
           try {
             const userSession = await freeStorage<SessionData>(bot.token).read(user)
-            console.log(userSession)
+
+            // this should not be done. non-suscribed users should be deleted from the admin.users list, so we don't waste time getting their session
+            if(!userSession.suscribed) continue ;
             let poemID = userSession.queue.shift()
             if(!poemID){
               userSession.queue = shuffleArray(userSession.allPoems.slice())
