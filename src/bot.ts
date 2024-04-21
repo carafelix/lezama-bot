@@ -4,15 +4,12 @@ import {
   landingMenu,
   settingsMenu,
   menus,
+  helpText,
 } from './menus';
 import shortiesIDs from './data/shorties.json'
 import { composedFetch } from './lib/database/mongo';
 import { freeStorage } from "@grammyjs/storage-free";
 import { formatPoems, shuffleArray, rand } from './utils/utils';
-
-
-import { MongoDBAdapter, ISession } from "@grammyjs/storage-mongodb";
-
 
 export type Lezama = Context & SessionFlavor<SessionData>;
 
@@ -44,7 +41,9 @@ async function getBot(env: Env) {
     if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
     await replyWithMenu(c, landingMenu)
   })
-  bot.command('help', async c => await c.reply(`chatID: ${c.chat.id}; list all commands`))    
+  bot.command('help', async c =>{
+    await c.reply(helpText)
+  })    
   bot.command('settings', async (c) => await replyWithMenu(c, settingsMenu))
 
   bot.command('resetqueue', async c =>{
