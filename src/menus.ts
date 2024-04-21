@@ -6,34 +6,35 @@ export async function landingMessage(c: CommandContext<Context>, next : NextFunc
 `<b>Lezama - Custom Daily Messages</b>
 
 Description`
-
     await c.reply(landingMsg, { parse_mode: "HTML"} );
     next()
 }
 
 const mainText = `veet\n\n`;
 const main = new Menu('mainMenu')
-            .submenu('Subscribe', 'subscribe-menu')
+            .submenu('Subscribe!', 'subscribe-menu')
             .submenu('Settings', 'settings-menu')
 
 
 const subscribeText = `subscribe\n\n`;
 const subscribe = new Menu('subscribe-menu')
-            .text('papi')
             .back('Back')
+            .text('papi')
 
 
 const settingsText = `settings\n\n`;
 const settings = new Menu('settings-menu')
-            .text('mami')
             .back('Back')
+            .text('mami')
 
 
-const selectSuscribeHourText = `Please select the hour for recieve your daily message`
-const selectSuscribeHour = new Menu('select-suscribe-hour-menu')
+const selectSubscribeHourText = `Please select the hour for recieve your daily message`
+const selectSubscribeHour = new Menu('select-suscribe-hour-menu')
+            .back('Back')
 
 main.register(settings);
 main.register(subscribe);
+subscribe.register(selectSubscribeHour)
 
 export const mainMenu = {
     menu: main,
@@ -47,8 +48,6 @@ export const settingsMenu = {
     menu: settings,
     text: settingsText
 }
-
-export const allMenus = [mainMenu, subscribeMenu, settingsMenu]
 
 
 
@@ -74,26 +73,6 @@ export async function handleSubscribeMenu(c : CallbackQueryContext<Context> | Co
     
     await c.reply('new suscribe menu')
 
-    // const data = JSON.stringify({
-    //     "collection": "poems",
-    //     "database": "lezama",
-    //     "dataSource": "Lezama",
-    //     "projection": {
-    //         "title": 1
-    //     }
-    // });
-
-    // const v = await fetch(MONGO_ENDPOINT + action, {
-    //     method: 'post',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //         'Access-Control-Request-Headers': '*',
-    //         'api-key': MONGO_KEY,
-    //         },
-    //     body: data
-    //     } as RequestInit)
-    
-    // const da = await v.json()
 
     const suscribeMenuText = 
 `<b>Press the Select Hour</b>
