@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy && grep -o 'BOT_TOKEN=[^[:space:]]*' ./.dev.vars | cut -d '=' -f 2 | xargs -I {} curl -X GET 'https://api.telegram.org/bot{}/setWebhook?url=https://lezama.heroprotagonist32.workers.dev/' | { cat; echo; }",
     "dev": "concurrently -p '[{index}]-[{time}]' -t HH:mm:ss \"gnome-terminal --tab -- ngrok http 8080\" \"wrangler dev --test-scheduled\" \"sleep 5 && npm run updateWebhook\"",
-    "updateWebhook": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(cat ./.dev.vars | grep -o 'BOT_TOKEN=[^[:space:]]*' | cut -d '=' -f 2); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}'",
+    "updateWebhook": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(cat ./.dev.vars | grep -o 'BOT_TOKEN=[^[:space:]]*' | cut -d '=' -f 2); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}' | { cat; echo; }",
     "start": "wrangler dev",
     "testCron": "curl http://localhost:8080/__scheduled?cron=30+13+*+*+* | { cat; echo; }"
   },

@@ -27,8 +27,13 @@ export default {
           const adminData = await freeStorage<AdminData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).read(env.FREE_STORAGE_SECRET_KEY)
           for (const user in adminData.users) {
             try {
+
+              // this should not be done.
+              // non-suscribed users should be deleted / inserted from the admin.users list
+              // when they press the pause / suscribe button
+              // so we don't waste time getting their session
+              
               const userSession = await freeStorage<SessionData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).read(user)
-              // this should not be done. non-suscribed users should be deleted from the admin.users list, so we don't waste time getting their session
               if (!userSession.suscribed) continue;
               let poemID = userSession.queue.shift()
               if (!poemID) {
