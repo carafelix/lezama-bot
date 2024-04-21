@@ -5,3 +5,6 @@ workers_dev = true
 
 [dev]
 port = 8080
+
+[triggers]
+crons = ["30 9 * * *"]
