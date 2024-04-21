@@ -1,5 +1,5 @@
-start - Initiate a session with the bot. This command sets up your chat and provides a menu for navigation.
-help - List of all available commands.
-settings - Access the settings menu to customize your bot experience.
-resetqueue - Reshuffle the order of all available poems for a fresh selection.
-randompoem - Receive a random poem from the collection.
+start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando.
+help - Lista los comandos disponibles.
+settings - Accede al menu de configuración.
+resetqueue - Reinicia tu cola de poemas personal y la revuelve.
+randompoem - Recibe un poema al azar de la colección.
