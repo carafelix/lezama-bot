@@ -69,11 +69,6 @@ async function getBot(env: Env) {
     }
   })
 
-  bot.command('test', async (c) => {
-    const v = (await freeStorage<AdminData>(bot.token).read(env.FREE_STORAGE_SECRET_KEY)).users
-    console.log(v);
-  })
-
   // nothing else matched
   bot.on('message', c => c.react('🏆'))
 
