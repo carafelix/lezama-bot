@@ -22,7 +22,7 @@ export default {
   },
   async scheduled(e: ScheduledController, env: Env, c: ExecutionContext) {
     switch (e.cron) {
-      case "*/2 * * * *":
+      case "30 13 * * *":
         const bot = getBot(env)
           const adminData = await freeStorage<AdminData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).read(env.FREE_STORAGE_SECRET_KEY)
           for (const user in adminData.users) {

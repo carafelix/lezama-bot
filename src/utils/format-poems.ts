@@ -4,7 +4,7 @@ export function formatPoems(poem: PoemDocument, chunk?: number) {
 
 ${poem.text}
 
-        ${poem.book.author} — ${poem.book.title} (${poem.book.publishYear})
+        ${poem.book.author} — ${poem.book.title} ${poem.book.publishYear ? `(${poem.book.publishYear})` : ''}
 `
     )
 }
