@@ -47,7 +47,10 @@ async function getBot(env: Env) {
   bot.command('help', async c => await c.reply(`chatID: ${c.chat.id}; list all commands`))    
   bot.command('settings', async (c) => await replyWithMenu(c, settingsMenu))
 
-  bot.command('resetqueue', async c => c.session.queue = shuffleArray(c.session.allPoems.slice()))
+  bot.command('resetqueue', async c =>{
+    c.session.queue = shuffleArray(c.session.allPoems.slice())
+    await c.reply('Queue reset')
+  })
   bot.command('randompoem', async (c) => {
     const poem = await composedFetch(env,'short-poems', 'findOne', {
       filter: {
