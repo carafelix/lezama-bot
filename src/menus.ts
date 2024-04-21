@@ -12,8 +12,6 @@ const landing = new Menu<Lezama>('landing-menu')
     .text(
         (c) => c.session.suscribed ? 'Pause' : 'Subscribe!',
         (c : Lezama & MenuFlavor) => {
-            // 
-            console.log(BOT_TOKEN)
             c.session.suscribed = !c.session.suscribed
             if (!c.session.queue.length) {
                 // must be a call too the database instead
