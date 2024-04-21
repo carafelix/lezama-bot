@@ -8,7 +8,8 @@
     "devWebhook": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(cat ./.dev.vars | grep -o 'BOT_TOKEN=[^[:space:]]*' | cut -d '=' -f 2); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}' | { cat; echo; }",
     "start": "wrangler dev",
     "testCron": "curl http://localhost:8080/__scheduled?cron=30+13+*+*+* | { cat; echo; }",
-    "deployWebhook": "grep -o 'BOT_TOKEN=[^[:space:]]*' ./.dev.vars | cut -d '=' -f 2 | xargs -I {} curl -X GET 'https://api.telegram.org/bot{}/setWebhook?url=https://lezama.heroprotagonist32.workers.dev/' | { cat; echo; }"
+    "deployWebhook": "grep -E '^(BOT_TOKEN|DEPLOY_URI)=' ./.dev.vars | awk -F= '/^BOT_TOKEN=/{bot_token=$2} /^DEPLOY_URI=/{deploy_uri=$2} END{printf \"https://api.telegram.org/bot%s/setWebhook?url=%s\", bot_token, deploy_uri}' | xargs -I {} curl -X GET {} | { cat; echo; }"
+    
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240405.0",
