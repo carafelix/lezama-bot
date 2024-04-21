@@ -13,7 +13,7 @@ import { formatPoems, shuffleArray, rand } from './utils/utils';
 
 export type Lezama = Context & SessionFlavor<SessionData>;
 
-async function getBot(env: Env) {
+function getBot(env: Env) {
 
   const bot = new Bot<Lezama>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
 
@@ -27,7 +27,7 @@ async function getBot(env: Env) {
       queue: shuffleArray(shortiesIDs),
       visited: []
     }),
-    storage: freeStorage<SessionData>(bot.token, {jwt: env.FREE_STORAGE_TOKEN})
+    storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
 
 
@@ -39,19 +39,27 @@ async function getBot(env: Env) {
   bot.command('start', async (c) => {
     if (!c.session.chatID) c.session.chatID = c.chat.id;
     if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
-    await replyWithMenu(c, landingMenu)
+    await replyWithMenu(c, landingMenu);
+
+    const adminData = (await freeStorage<AdminData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).read((env.FREE_STORAGE_SECRET_KEY)))
+    
+    if (!adminData.users?.[`${c.chat.id}`]) {
+      adminData.users[`${c.chat.id}`] = `${c.chat.id}`;
+      await freeStorage<AdminData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).write(env.FREE_STORAGE_SECRET_KEY, adminData);
+    }
+    
   })
-  bot.command('help', async c =>{
+  bot.command('help', async c => {
     await c.reply(helpText)
-  })    
+  })
   bot.command('settings', async (c) => await replyWithMenu(c, settingsMenu))
 
-  bot.command('resetqueue', async c =>{
+  bot.command('resetqueue', async c => {
     c.session.queue = shuffleArray(c.session.allPoems.slice())
     await c.reply('Queue reset')
   })
   bot.command('randompoem', async (c) => {
-    const poem = await composedFetch(env,'short-poems', 'findOne', {
+    const poem = await composedFetch(env, 'short-poems', 'findOne', {
       filter: {
         "_id": c.session.allPoems[rand(c.session.allPoems.length)]
       }

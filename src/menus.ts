@@ -1,7 +1,10 @@
-import { Menu } from "@grammyjs/menu";
-import { Lezama } from "./bot";
+import { Menu, MenuFlavor } from "@grammyjs/menu";
+import bot, { Lezama } from "./bot";
 import shortiesIDs from './data/shorties.json'
 import { shuffleArray } from "./utils/shuffle-arr";
+import { Context, SessionFlavor } from "grammy";
+import { Update } from "grammy/types";
+import { freeStorage } from "@grammyjs/storage-free";
 
 const landingText =
     `<b>Lezama - Custom Daily Messages</b>
@@ -11,7 +14,7 @@ Description`
 const landing = new Menu<Lezama>('landing-menu')
     .text(
         (c) => c.session.suscribed ? 'Pause' : 'Subscribe!',
-        (c) => {
+        async (c : Lezama & MenuFlavor) => {
             c.session.suscribed = !c.session.suscribed
             if (!c.session.queue.length) {
                 // must be a call too the database instead
@@ -19,7 +22,7 @@ const landing = new Menu<Lezama>('landing-menu')
             }
             c.menu.update()
             c.answerCallbackQuery({
-                text: c.session.suscribed ? 'Welcome to the Paradiso' : 'So you are going...',
+                text: c.session.suscribed ? 'Welcome to the Paradiso' : 'Running away?',
                 show_alert: true,
             })
         }

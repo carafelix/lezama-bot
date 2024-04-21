@@ -11,7 +11,7 @@ export default {
     let response = new Response('Bot initialization failed or... who are you?')
 
     try {
-      const bot = await getBot(env)
+      const bot = getBot(env)
       response = await webhookCallback(bot, 'cloudflare-mod')(req)
     }
     catch (err) {
@@ -22,36 +22,34 @@ export default {
   },
   async scheduled(e: ScheduledController, env: Env, c: ExecutionContext) {
     switch (e.cron) {
-      case "30 9 * * *":
-        const bot = await getBot(env)
-        const users = (await freeStorage<AdminData>(bot.token).read(env.FREE_STORAGE_SECRET_KEY)).users
-
-        for (const user in users) {
-          try {
-            const userSession = await freeStorage<SessionData>(bot.token).read(user)
-
-            // this should not be done. non-suscribed users should be deleted from the admin.users list, so we don't waste time getting their session
-            if(!userSession.suscribed) continue ;
-            let poemID = userSession.queue.shift()
-            if(!poemID){
-              userSession.queue = shuffleArray(userSession.allPoems.slice())
-              poemID = userSession.queue.shift()
-            }
-            const poem = await composedFetch(env,'short-poems', 'findOne', {
-              filter: {
-                "_id": poemID
+      case "*/2 * * * *":
+        const bot = getBot(env)
+          const adminData = await freeStorage<AdminData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).read(env.FREE_STORAGE_SECRET_KEY)
+          for (const user in adminData.users) {
+            try {
+              const userSession = await freeStorage<SessionData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).read(user)
+              // this should not be done. non-suscribed users should be deleted from the admin.users list, so we don't waste time getting their session
+              if (!userSession.suscribed) continue;
+              let poemID = userSession.queue.shift()
+              if (!poemID) {
+                userSession.queue = shuffleArray(userSession.allPoems.slice())
+                poemID = userSession.queue.shift()
               }
-            }) as MongoResponse
-            await bot.api.sendMessage(user,formatPoems(poem.document))
-            await freeStorage<SessionData>(bot.token).write(user,userSession)
+              const poem = await composedFetch(env, 'short-poems', 'findOne', {
+                filter: {
+                  "_id": poemID
+                }
+              }) as MongoResponse
+              await bot.api.sendMessage(user, formatPoems(poem.document))
+              await freeStorage<SessionData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).write(user, userSession)
+            }
+            catch (err) {
+              console.log('inside err:', err);
+            }
           }
-          catch (err) {
-            console.log(err);
-          }
-        }
 
-        break;
-    }
+          break;
+        }
     return
   }
 
