@@ -1,15 +1,17 @@
-import { Bot, CommandContext, Context, SessionFlavor, session } from 'grammy';
+import { Bot, CommandContext, Context, InlineKeyboard, SessionFlavor, session } from 'grammy';
 import * as Realm from 'realm-web';
 import {
-  landingMenu,
-  settingsMenu,
+  settings,
   menus,
   helpText,
+  landingText,
 } from './menus';
 import shortiesIDs from './data/shorties.json'
-import { composedFetch } from './lib/database/mongo';
+import { writeAdminData, composedFetch, readAdminData } from './lib/database/handleDatabases';
 import { freeStorage } from "@grammyjs/storage-free";
 import { formatPoems, shuffleArray, rand } from './utils/utils';
+import { Menu } from '@grammyjs/menu';
+import { Chat } from 'grammy/types';
 
 export type Lezama = Context & SessionFlavor<SessionData>;
 
@@ -22,10 +24,10 @@ function getBot(env: Env) {
   bot.use(session({
     initial: () => ({
       chatID: 0,
-      suscribed: false,
+      subscribed: false,
       allPoems: shortiesIDs,
       queue: shuffleArray(shortiesIDs),
-      visited: []
+      cron: "30 13 * * *"
     }),
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
@@ -39,20 +41,43 @@ function getBot(env: Env) {
   bot.command('start', async (c) => {
     if (!c.session.chatID) c.session.chatID = c.chat.id;
     if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
-    await replyWithMenu(c, landingMenu);
+    const landing = new InlineKeyboard()
+    .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
+    await replyWithMenu(c,landingText,landing)
+  })
 
-    const adminData = (await freeStorage<AdminData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).read((env.FREE_STORAGE_SECRET_KEY)))
-    
-    if (!adminData.users?.[`${c.chat.id}`]) {
-      adminData.users[`${c.chat.id}`] = `${c.chat.id}`;
-      await freeStorage<AdminData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).write(env.FREE_STORAGE_SECRET_KEY, adminData);
+  bot.callbackQuery('handleSubscribe', async (c)=>{
+    c.session.subscribed = !c.session.subscribed
+    if(c.chat){
+      const chatId = (c.chat as Chat).id
+      try {
+        const adminData = await readAdminData(bot, env)
+        if (c.session.subscribed) {
+          if(!c.session.cron){
+            c.session.cron = "30 13 * * *"
+          }
+          adminData.users[`${chatId}`] = c.session.cron;
+          await writeAdminData(bot,env,adminData)
+        } else {
+          adminData.users[`${chatId}`] = false;
+          await writeAdminData(bot,env,adminData)
+        }
+        
+        const landing = new InlineKeyboard()
+        .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
+        c.editMessageReplyMarkup({reply_markup:landing})
+        
+      } catch (err) {
+        console.log(err)
+      }
     }
     
   })
+  
   bot.command('help', async c => {
     await c.reply(helpText)
   })
-  bot.command('settings', async (c) => await replyWithMenu(c, settingsMenu))
+  bot.command('settings', async (c) => await replyWithMenu(c, settings.text, settings.menu))
 
   bot.command('resetqueue', async c => {
     c.session.queue = shuffleArray(c.session.allPoems.slice())
@@ -70,6 +95,8 @@ function getBot(env: Env) {
     }
   })
 
+
+
   // nothing else matched
   bot.on('message', c => c.react('🏆'))
 
@@ -82,6 +109,6 @@ function getBot(env: Env) {
 export default getBot
 
 
-async function replyWithMenu(c: CommandContext<Lezama>, menu: ExportedMenu) {
-  await c.reply(menu.text, { parse_mode: "HTML", reply_markup: menu.menu })
+async function replyWithMenu(c: CommandContext<Lezama>, text : string, menu: InlineKeyboard | Menu<Lezama>) {
+  await c.reply(text, { parse_mode: "HTML", reply_markup: menu })
 }

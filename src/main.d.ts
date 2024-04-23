@@ -30,17 +30,17 @@ interface BookDocument {
 
 interface SessionData {
   chatID: number,
-  suscribed: boolean,
+  subscribed: boolean,
   allPoems: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
-  visited: PoemDocument["_id"][],
+  cron: string // cron string
 }
 
 type ExportedMenu = {
-  menu: Menu<Lezama>;
+  menu: Menu<Lezama>
   text: string;
 }
 
 interface AdminData {
-  users: any
+  users: any // this is the currently subscribed users
 }
