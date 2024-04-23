@@ -27,7 +27,7 @@ function getBot(env: Env) {
       subscribed: false,
       allPoems: shortiesIDs,
       queue: shuffleArray(shortiesIDs),
-      cron: "30 13 * * *"
+      cronHour: 9
     }),
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
@@ -42,38 +42,35 @@ function getBot(env: Env) {
     if (!c.session.chatID) c.session.chatID = c.chat.id;
     if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
     const landing = new InlineKeyboard()
-    .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
-    await replyWithMenu(c,landingText,landing)
+      .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
+    await replyWithMenu(c, landingText, landing)
   })
 
-  bot.callbackQuery('handleSubscribe', async (c)=>{
+  bot.callbackQuery('handleSubscribe', async (c) => {
     c.session.subscribed = !c.session.subscribed
-    if(c.chat){
+    if (c.chat) {
       const chatId = (c.chat as Chat).id
       try {
         const adminData = await readAdminData(bot, env)
         if (c.session.subscribed) {
-          if(!c.session.cron){
-            c.session.cron = "30 13 * * *"
-          }
-          adminData.users[`${chatId}`] = c.session.cron;
-          await writeAdminData(bot,env,adminData)
+          adminData.users[`${chatId}`] = c.session.cronHour;
+          await writeAdminData(bot, env, adminData)
         } else {
           adminData.users[`${chatId}`] = false;
-          await writeAdminData(bot,env,adminData)
+          await writeAdminData(bot, env, adminData)
         }
-        
+
         const landing = new InlineKeyboard()
-        .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
-        c.editMessageReplyMarkup({reply_markup:landing})
-        
+          .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
+        c.editMessageReplyMarkup({ reply_markup: landing })
+
       } catch (err) {
         console.log(err)
       }
     }
-    
+
   })
-  
+
   bot.command('help', async c => {
     await c.reply(helpText)
   })
@@ -109,6 +106,6 @@ function getBot(env: Env) {
 export default getBot
 
 
-async function replyWithMenu(c: CommandContext<Lezama>, text : string, menu: InlineKeyboard | Menu<Lezama>) {
+async function replyWithMenu(c: CommandContext<Lezama>, text: string, menu: InlineKeyboard | Menu<Lezama>) {
   await c.reply(text, { parse_mode: "HTML", reply_markup: menu })
 }

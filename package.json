@@ -7,7 +7,7 @@
     "dev": "concurrently -p '[{index}]-[{time}]' -t HH:mm:ss \"gnome-terminal --tab -- ngrok http 8080\" \"wrangler dev --test-scheduled\" \"sleep 5 && npm run devWebhook\"",
     "devWebhook": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(cat ./.dev.vars | grep -o 'BOT_TOKEN=[^[:space:]]*' | cut -d '=' -f 2); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}' | { cat; echo; }",
     "start": "wrangler dev",
-    "testCron": "curl http://localhost:8080/__scheduled?cron=30+13+*+*+* | { cat; echo; }",
+    "testCron": "curl http://localhost:8080/__scheduled?cron=0+*+*+*+* | { cat; echo; }",
     "deployWebhook": "grep -E '^(BOT_TOKEN|DEPLOY_URI)=' ./.dev.vars | awk -F= '/^BOT_TOKEN=/{bot_token=$2} /^DEPLOY_URI=/{deploy_uri=$2} END{printf \"https://api.telegram.org/bot%s/setWebhook?url=%s\", bot_token, deploy_uri}' | xargs -I {} curl -X GET {} | { cat; echo; }"
     
   },

@@ -33,7 +33,7 @@ interface SessionData {
   subscribed: boolean,
   allPoems: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
-  cron: string // cron string
+  cronHour: Date.getUTCHours
 }
 
 type ExportedMenu = {
