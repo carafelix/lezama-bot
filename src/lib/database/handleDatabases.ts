@@ -1,6 +1,6 @@
 import { freeStorage } from "@grammyjs/storage-free";
 import { Bot } from "grammy";
-import { Lezama } from "../../bot";
+import { Lezama } from "../../telegram/bot";
 
 export async function composedFetch(env : Env ,collection : string, action : string, opts? : object){
     try{

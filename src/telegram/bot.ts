@@ -6,10 +6,10 @@ import {
   helpText,
   landingText,
 } from './menus';
-import shortiesIDs from './data/shorties.json'
-import { writeAdminData, composedFetch, readAdminData } from './lib/database/handleDatabases';
+import shortiesIDs from '../data/shorties.json'
+import { writeAdminData, composedFetch, readAdminData } from '../lib/database/handleDatabases';
 import { freeStorage } from "@grammyjs/storage-free";
-import { formatPoems, shuffleArray, rand } from './utils/utils';
+import { formatPoems, shuffleArray, rand } from '../utils';
 import { Menu } from '@grammyjs/menu';
 import { Chat } from 'grammy/types';
 

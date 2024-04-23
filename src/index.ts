@@ -1,5 +1,5 @@
 import { webhookCallback } from 'grammy';
-import getBot from './bot';
+import getBot from './telegram/bot';
 import { dispatchTelegram } from './crons';
 
 export default {

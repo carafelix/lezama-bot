@@ -1,7 +1,7 @@
 import { Menu, MenuFlavor } from "@grammyjs/menu";
 import { Lezama } from "./bot";
-import shortiesIDs from './data/shorties.json'
-import { shuffleArray } from "./utils/shuffle-arr";
+import shortiesIDs from '../data/shorties.json'
+import { shuffleArray } from "../shuffle-arr";
 import { InlineKeyboard } from "grammy";
 
 export const landingText =

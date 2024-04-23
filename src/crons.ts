@@ -1,4 +1,4 @@
-import getBot from './bot';
+import getBot from './telegram/bot';
 import { freeStorage } from '@grammyjs/storage-free';
 import { composedFetch } from './lib/database/handleDatabases';
 import { formatPoems } from './utils/format-poems';
@@ -14,7 +14,7 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
                 if (adminData.users[user] === false) {
                   continue
                 }
-                
+
                 const userSession = await freeStorage<SessionData>(bot.token,{jwt: env.FREE_STORAGE_TOKEN}).read(user)
                 let poemID = userSession.queue.shift()
                 if (!poemID) {
