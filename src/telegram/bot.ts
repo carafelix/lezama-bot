@@ -33,7 +33,7 @@ function getBot(env: Env) {
       queue: shuffleArray(shortiesIDs),
       cronHour: 13,
       randomHour: false,
-      timezone: 0
+      timezone: -4
     }),
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
