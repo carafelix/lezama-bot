@@ -52,10 +52,10 @@ export const landing = {
 
 
 export const helpText =
-    `/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
+`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
+/settings - Accede al menu de configuraciones.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
-/settings - Accede al menu de configuraciones.
 /resetqueue - Reinicia tu cola de poemas personal y la revuelve.
 /randompoem - Recibe un poema al azar de la colección.`
 
