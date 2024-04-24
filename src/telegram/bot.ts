@@ -3,23 +3,27 @@ import {
   settings,
   menus,
   helpText,
-  landingText,
   info,
+  landing
 } from './menus';
 import shortiesIDs from '../data/shorties.json'
 import { writeAdminData, composedFetch, readAdminData } from '../lib/database/handleDatabases';
 import { freeStorage } from "@grammyjs/storage-free";
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
 import { Menu, MenuFlavor } from '@grammyjs/menu';
-import { Chat } from 'grammy/types';
 
-export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor;
+export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor & envWrapper;
 
 function getBot(env: Env) {
 
   const bot = new Bot<Lezama>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
 
   // composer
+
+  bot.use(async (c, next) => {
+    c.env = env;
+    await next();
+  })
 
   bot.use(session({
     initial: () => ({
@@ -33,41 +37,17 @@ function getBot(env: Env) {
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
 
-
   // Register menus. Should maybe return the menus as a function so I can pass bot/env data
 
-  const landing = new Menu<Lezama>('landing')
-    .text((c) => c.session.subscribed ? 'Pausar' : 'Suscríbete!',
-      async (c) => {
-        c.session.subscribed = !c.session.subscribed
-        if (c.chat) {
-          const chatId = (c.chat as Chat).id
-          try {
-            const adminData = await readAdminData(bot, env)
-            if (c.session.subscribed) {
-              adminData.users[`${chatId}`] = c.session.cronHour;
-              await writeAdminData(bot, env, adminData)
-            } else {
-              adminData.users[`${chatId}`] = false;
-              await writeAdminData(bot, env, adminData)
-            }
-          } catch (err) {
-            console.log(err);
-          }
-        };
-        c.menu.update()
-      })
+  
 
   menus.forEach(menu => bot.use(menu.menu))
-  bot.use(landing)
 
   // Commands 
 
   bot.command('start', async (c) => {
     if (!c.session.chatID) c.session.chatID = c.chat.id;
-    if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
-
-    await replyWithMenu(c, landingText, landing)
+    await replyWithMenu(c, landing.text, landing.menu)
   })
 
   bot.command('help', async c => {
@@ -94,7 +74,6 @@ function getBot(env: Env) {
   bot.command('info', async (c) => {
     await replyWithMenu(c, info.text, info.menu)
   })
-
 
   // nothing else matched
   bot.on('message', c => c.react('🏆'))

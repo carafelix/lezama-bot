@@ -1,8 +1,11 @@
 import { Menu } from "@grammyjs/menu";
 import { Lezama } from "./bot";
+import { readAdminData, writeAdminData } from "../lib/database/handleDatabases";
+import { rand } from "../utils/utils";
+import { Chat } from "grammy/types";
 
-export const landingText =
-`<b>Lezama - Poesía a domicilio</b>
+const landingText =
+    `<b>Lezama - Poesía a domicilio</b>
 
 Este bot te permite:
 - Recibir un poema al día (distinto para cada persona).
@@ -14,8 +17,42 @@ Si deseas contribuir o conocer la arquitectura del bot, todo aquello lo encontra
 
 Pulsa el botón de abajo y comenzaras a recibir un poema al día`
 
+const landingMenu = new Menu<Lezama>('landing')
+    .text((c) => c.session.subscribed ? 'Pausar' : 'Suscríbete!',
+      async (c, next) => {
+        c.session.subscribed = !c.session.subscribed
+        if (c.chat) {
+          const chatId = c.session.chatID
+          try {
+            const adminData = await readAdminData(c)
+            if (c.session.subscribed) {
+              adminData.users[`${chatId}`] = c.session.cronHour;
+              await writeAdminData(c, adminData)
+            } else {
+              adminData.users[`${chatId}`] = false;
+              await writeAdminData(c, adminData)
+            }
+          } catch (err) {
+            await c.reply('An error ocurred while writing your preference')
+          }
+        }; 
+        await next()
+      },
+      async (c) => {
+        c.menu.update()
+        await c.reply(c.session.subscribed ? 'Welcome to the Paradiso' : 'Running away, uh?')
+      }
+    )
+
+
+export const landing = {
+    menu: landingMenu,
+    text: landingText
+}
+
+
 export const helpText =
-`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
+    `/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
 /settings - Accede al menu de configuraciones.
@@ -23,23 +60,54 @@ export const helpText =
 /randompoem - Recibe un poema al azar de la colección.`
 
 
-export const settingsText =
+const settingsText =
 `<b>Configuraciones</b>
 
 Aquí podrás configurar:
+
 - La hora a la que deseas recibir el poema diario, o ponerla en aleatorio.
+
 - Configurar tu cola de poemas personal:
     - Seleccionar los libros u autores de los cuales se conformara tu cola.
     - Ordenarla por fecha de publicación, por orden alfabético o en aleatorio.
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
-    .back('Volver')
-    .submenu('Seleccionar hora','select-suscribe-hour-menu')
+    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', (c) => c.editMessageText(selectSubscribeHourText))
+    .submenu('Configurar cola', 'config-queue')
 
-
-const selectSubscribeHourText = `Selecciona la hora a la que quieres recibir el diario placer:`
+const selectSubscribeHourText = `Selecciona la hora, en UTC-0, a la que quieres recibir el diario placer`
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
-    .back('Volver')
+    .dynamic((ctx, range) => {
+        for (let i = 1; i <= 24; i++) {
+            range
+                .text(`${i < 10 ? 0 : ''}${i}:00`,
+                    async (c) => {
+                        c.session.randomHour = false
+                        c.session.cronHour = i
+                        const adminData = await readAdminData(c)
+                        adminData.users[c.session.chatID] = i
+                        await writeAdminData(c, adminData)
+                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC-0`)
+                    })
+
+            if (i % 4 == 0) {
+                range.row();
+            }
+        }
+    })
+    .row()
+    .text('Random', async (c) => {
+        c.session.randomHour = true
+        const randomHour = rand(24) + 1
+        c.session.cronHour = randomHour
+        const adminData = await readAdminData(c)
+        adminData.users[c.session.chatID] = randomHour
+        await writeAdminData(c, adminData)
+        await c.reply('Poemas programados a hora random para cada dia')
+    })
+    .url('Conversor UTC-0', 'https://time.is/es/UTC')
+    .row()
+    .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
 settingsMenu.register(selectSubscribeHour)
@@ -50,7 +118,7 @@ export const settings = {
 }
 
 const infoText =
-`<b>Información</b>
+    `<b>Información</b>
 
 Este bot esta construido sobre los Webhooks de Telegram en conjunto con Cloudflare Workers, un servicio de funciones anónimas alojadas en multiples servidores a lo largo del globo, conectándote siempre al más cercano y evitando los costos de mantener un server prendido 24/7.
 
@@ -64,11 +132,11 @@ const infoMenu = new Menu<Lezama>('info-menu')
     .url('Contacto', 'https://t.me/BotGodMaster')
     .url('Github', 'https://github.com/carafelix/lezama-api').row()
     .submenu("To-do's", 'todo-menu',
-        (c) => c.editMessageText(todoText, { parse_mode: 'HTML' } ))
+        (c) => c.editMessageText(todoText, { parse_mode: 'HTML' }))
 
 
 const todoText =
-`<b> To-do's</b>
+    `<b> To-do's</b>
 
 Tengo aún que migrar la data de sesión a Mongo, pero al parecer tiene más latencia que el FreeStorage.
 
@@ -89,5 +157,5 @@ export const info = {
     text: infoText
 }
 
-export const menus = [settings, info]
+export const menus = [settings, info,landing]
 

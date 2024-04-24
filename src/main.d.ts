@@ -9,6 +9,10 @@ interface Env {
   FREE_STORAGE_SECRET_KEY: string
 }
 
+interface envWrapper{
+  env: Env
+}
+
 interface MongoResponse {
   document: PoemDocument
 }
@@ -33,7 +37,8 @@ interface SessionData {
   subscribed: boolean,
   allPoems: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
-  cronHour: Date.getUTCHours
+  cronHour: Date.getUTCHours,
+  randomHour: boolean
 }
 
 type ExportedMenu = {
