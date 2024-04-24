@@ -33,13 +33,11 @@ function getBot(env: Env) {
       queue: shuffleArray(shortiesIDs),
       cronHour: 13,
       randomHour: false,
+      timezone: 0
     }),
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
 
-  // Register menus. Should maybe return the menus as a function so I can pass bot/env data
-
-  
 
   menus.forEach(menu => bot.use(menu.menu))
 
@@ -75,8 +73,17 @@ function getBot(env: Env) {
     await replyWithMenu(c, info.text, info.menu)
   })
 
+  bot.hears( /^(GMT|UTC)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/ , 
+      (c) => {
+        const offset = c.message?.text?.slice(3)
+        if(offset){
+          c.session.timezone = +offset
+          c.reply('Cambio de huso horario exitoso a UTC' + offset)
+        }
+      })
+
   // nothing else matched
-  bot.on('message', c => c.react('🏆'))
+  bot.on('message', c => c.reply('Qué estas buscando? Intenta usar /help'))
 
   // error handle
   bot.catch((err) => { console.trace(err) })

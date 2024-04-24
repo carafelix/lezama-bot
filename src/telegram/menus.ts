@@ -18,29 +18,29 @@ Pulsa el botón de abajo y comenzaras a recibir un poema al día`
 
 const landingMenu = new Menu<Lezama>('landing')
     .text((c) => c.session.subscribed ? 'Pausar' : 'Suscríbete!',
-      async (c, next) => {
-        c.session.subscribed = !c.session.subscribed
-        if (c.chat) {
-          const chatId = c.session.chatID
-          try {
-            const adminData = await readAdminData(c)
-            if (c.session.subscribed) {
-              adminData.users[`${chatId}`] = c.session.cronHour;
-              await writeAdminData(c, adminData)
-            } else {
-              adminData.users[`${chatId}`] = false;
-              await writeAdminData(c, adminData)
-            }
-          } catch (err) {
-            await c.reply('An error ocurred while writing your preference')
-          }
-        }; 
-        await next()
-      },
-      async (c) => {
-        c.menu.update()
-        await c.reply(c.session.subscribed ? 'Welcome to the Paradiso' : 'Running away, uh?')
-      }
+        async (c, next) => {
+            c.session.subscribed = !c.session.subscribed
+            if (c.chat) {
+                const chatId = c.session.chatID
+                try {
+                    const adminData = await readAdminData(c)
+                    if (c.session.subscribed) {
+                        adminData.users[`${chatId}`] = c.session.cronHour;
+                        await writeAdminData(c, adminData)
+                    } else {
+                        adminData.users[`${chatId}`] = false;
+                        await writeAdminData(c, adminData)
+                    }
+                } catch (err) {
+                    await c.reply('An error ocurred while writing your preference')
+                }
+            };
+            await next()
+        },
+        async (c) => {
+            c.menu.update()
+            await c.reply(c.session.subscribed ? 'Welcome to the Paradiso' : 'Running away, uh?')
+        }
     )
 
 
@@ -51,7 +51,7 @@ export const landing = {
 
 
 export const helpText =
-`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
+    `/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
 /settings - Accede al menu de configuraciones.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
@@ -60,7 +60,7 @@ export const helpText =
 
 
 const settingsText =
-`<b>Configuraciones</b>
+    `<b>Configuraciones</b>
 
 Aquí podrás configurar:
 
@@ -71,10 +71,13 @@ Aquí podrás configurar:
     - Ordenarla por fecha de publicación, por orden alfabético o en aleatorio.
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
-    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', (c) => c.editMessageText(selectSubscribeHourText))
+    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', (c) => c.editMessageText(selectSubscribeHourText(c)))
     .submenu('Configurar cola', 'config-queue')
 
-const selectSubscribeHourText = `Selecciona la hora, en UTC-0, a la que quieres recibir el diario placer`
+const selectSubscribeHourText = (c : Lezama) =>  {
+    if(c.session.timezone == undefined) c.session.timezone = 0;
+    return `Selecciona la hora, en UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone }, a la que quieres recibir el diario placer`
+}
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
         for (let i = 1; i <= 24; i++) {
@@ -82,11 +85,12 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                 .text(`${i < 10 ? 0 : ''}${i}:00`,
                     async (c) => {
                         c.session.randomHour = false
-                        c.session.cronHour = i
+                        const newHour = (i + c.session.timezone) % 24
+                        c.session.cronHour = newHour
                         const adminData = await readAdminData(c)
-                        adminData.users[c.session.chatID] = i
+                        adminData.users[c.session.chatID] = newHour
                         await writeAdminData(c, adminData)
-                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC-0`)
+                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone }`)
                     })
 
             if (i % 4 == 0) {
@@ -104,7 +108,9 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
         await writeAdminData(c, adminData)
         await c.reply('Poemas programados a hora random para cada dia')
     })
-    .url('Conversor UTC-0', 'https://time.is/es/UTC')
+    // this should be 'Cambiar Huso horario' with a reply msg with your current time
+    .text(  (c)=>`Cambiar huso horario`, 
+            (c)=> c.reply('Contesta este mensaje con tu huso horario en formato UTC+h. \nEjemplos: UTC+4, UTC-5, UTC+9, UTC+10.', {reply_markup: { force_reply : true}}) ) 
     .row()
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
@@ -156,5 +162,5 @@ export const info = {
     text: infoText
 }
 
-export const menus = [settings, info,landing]
+export const menus = [settings, info, landing]
 

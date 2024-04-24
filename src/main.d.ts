@@ -38,7 +38,8 @@ interface SessionData {
   allPoems: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
   cronHour: Date.getUTCHours,
-  randomHour: boolean
+  randomHour: boolean,
+  timezone: number
 }
 
 type ExportedMenu = {
