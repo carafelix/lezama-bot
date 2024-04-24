@@ -1,19 +1,19 @@
 import { Bot, CommandContext, Context, InlineKeyboard, SessionFlavor, session } from 'grammy';
-import * as Realm from 'realm-web';
 import {
   settings,
   menus,
   helpText,
   landingText,
+  info,
 } from './menus';
 import shortiesIDs from '../data/shorties.json'
 import { writeAdminData, composedFetch, readAdminData } from '../lib/database/handleDatabases';
 import { freeStorage } from "@grammyjs/storage-free";
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
-import { Menu } from '@grammyjs/menu';
+import { Menu, MenuFlavor } from '@grammyjs/menu';
 import { Chat } from 'grammy/types';
 
-export type Lezama = Context & SessionFlavor<SessionData>;
+export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor;
 
 function getBot(env: Env) {
 
@@ -27,48 +27,47 @@ function getBot(env: Env) {
       subscribed: false,
       allPoems: shortiesIDs,
       queue: shuffleArray(shortiesIDs),
-      cronHour: 9
+      cronHour: 13,
+      randomHour: false,
     }),
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));
 
 
-  // Register menus
+  // Register menus. Should maybe return the menus as a function so I can pass bot/env data
+
+  const landing = new Menu<Lezama>('landing')
+    .text((c) => c.session.subscribed ? 'Pausar' : 'Suscríbete!',
+      async (c) => {
+        c.session.subscribed = !c.session.subscribed
+        if (c.chat) {
+          const chatId = (c.chat as Chat).id
+          try {
+            const adminData = await readAdminData(bot, env)
+            if (c.session.subscribed) {
+              adminData.users[`${chatId}`] = c.session.cronHour;
+              await writeAdminData(bot, env, adminData)
+            } else {
+              adminData.users[`${chatId}`] = false;
+              await writeAdminData(bot, env, adminData)
+            }
+          } catch (err) {
+            console.log(err);
+          }
+        };
+        c.menu.update()
+      })
+
   menus.forEach(menu => bot.use(menu.menu))
+  bot.use(landing)
 
   // Commands 
 
   bot.command('start', async (c) => {
     if (!c.session.chatID) c.session.chatID = c.chat.id;
     if (!c.session?.allPoems?.length) c.session.allPoems = shortiesIDs;
-    const landing = new InlineKeyboard()
-      .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
+
     await replyWithMenu(c, landingText, landing)
-  })
-
-  bot.callbackQuery('handleSubscribe', async (c) => {
-    c.session.subscribed = !c.session.subscribed
-    if (c.chat) {
-      const chatId = (c.chat as Chat).id
-      try {
-        const adminData = await readAdminData(bot, env)
-        if (c.session.subscribed) {
-          adminData.users[`${chatId}`] = c.session.cronHour;
-          await writeAdminData(bot, env, adminData)
-        } else {
-          adminData.users[`${chatId}`] = false;
-          await writeAdminData(bot, env, adminData)
-        }
-
-        const landing = new InlineKeyboard()
-          .text(c.session.subscribed ? 'Pause' : 'Subscribe!', 'handleSubscribe')
-        c.editMessageReplyMarkup({ reply_markup: landing })
-
-      } catch (err) {
-        console.log(err)
-      }
-    }
-
   })
 
   bot.command('help', async c => {
@@ -92,6 +91,9 @@ function getBot(env: Env) {
     }
   })
 
+  bot.command('info', async (c) => {
+    await replyWithMenu(c, info.text, info.menu)
+  })
 
 
   // nothing else matched
@@ -106,6 +108,6 @@ function getBot(env: Env) {
 export default getBot
 
 
-async function replyWithMenu(c: CommandContext<Lezama>, text: string, menu: InlineKeyboard | Menu<Lezama>) {
+async function replyWithMenu(c: CommandContext<Lezama>, text: string, menu:  Menu<Lezama> | InlineKeyboard) {
   await c.reply(text, { parse_mode: "HTML", reply_markup: menu })
 }
