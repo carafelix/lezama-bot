@@ -110,7 +110,7 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .text((c) => `Cambiar huso horario`,
         (c) => c.reply('Contesta este mensaje con tu huso horario en formato UTC+h, en numero enteros. \nEjemplos: UTC+4, UTC-5, UTC+9, UTC+10.', { reply_markup: { force_reply: true } }))
     .row()
-    .url('Averigua tu UTC', 'https://time.is/es/UTC')
+    .url('Tu huso horario', 'https://www.timeanddate.com/time/difference/timezone/utc')
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
