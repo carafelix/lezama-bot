@@ -20,21 +20,18 @@ const landingMenu = new Menu<Lezama>('landing')
     .text((c) => c.session.subscribed ? 'Pausar' : 'Suscríbete!',
         async (c, next) => {
             c.session.subscribed = !c.session.subscribed
-            if (c.chat) {
-                const chatId = c.session.chatID
-                try {
-                    const adminData = await readAdminData(c)
-                    if (c.session.subscribed) {
-                        adminData.users[`${chatId}`] = c.session.cronHour;
-                        await writeAdminData(c, adminData)
-                    } else {
-                        adminData.users[`${chatId}`] = false;
-                        await writeAdminData(c, adminData)
-                    }
-                } catch (err) {
-                    await c.reply('An error ocurred while writing your preference')
+            try {
+                const adminData = await readAdminData(c)
+                if (c.session.subscribed) {
+                    adminData.users[`${c.session.chatID}`] = (c.session.cronHour - c.session.timezone) % 24;
+                    await writeAdminData(c, adminData)
+                } else {
+                    adminData.users[`${c.session.chatID}`] = false;
+                    await writeAdminData(c, adminData)
                 }
-            };
+            } catch (err) {
+                await c.reply('An error ocurred while writing your preference')
+            }
             await next()
         },
         async (c) => {
@@ -74,23 +71,24 @@ const settingsMenu = new Menu<Lezama>('settings-menu')
     .submenu('Seleccionar hora', 'select-suscribe-hour-menu', (c) => c.editMessageText(selectSubscribeHourText(c)))
     .submenu('Configurar cola', 'config-queue')
 
-const selectSubscribeHourText = (c : Lezama) =>  {
-    if(c.session.timezone == undefined) c.session.timezone = 0;
-    return `Selecciona la hora, en UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone }, a la que quieres recibir el diario placer`
+const selectSubscribeHourText = (c: Lezama) => {
+    if (c.session.timezone == undefined) c.session.timezone = 0;
+    return `Selecciona la hora, en UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone}, a la que quieres recibir el diario placer`
 }
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
         for (let i = 1; i <= 24; i++) {
             range
-                .text(`${i < 10 ? 0 : ''}${i}:00`,
+                .text(`${i < 10 ? '0' : ''}${i}:00`,
                     async (c) => {
                         c.session.randomHour = false
-                        const newHour = (i + c.session.timezone) % 24
+                        const newHour = (i - c.session.timezone) % 24
                         c.session.cronHour = newHour
+                        
                         const adminData = await readAdminData(c)
                         adminData.users[c.session.chatID] = newHour
                         await writeAdminData(c, adminData)
-                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone }`)
+                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone}`)
                     })
 
             if (i % 4 == 0) {
@@ -109,8 +107,8 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
         await c.reply('Poemas programados a hora random para cada dia')
     })
     // this should be 'Cambiar Huso horario' with a reply msg with your current time
-    .text(  (c)=>`Cambiar huso horario`, 
-            (c)=> c.reply('Contesta este mensaje con tu huso horario en formato UTC+h. \nEjemplos: UTC+4, UTC-5, UTC+9, UTC+10.', {reply_markup: { force_reply : true}}) ) 
+    .text((c) => `Cambiar huso horario`,
+        (c) => c.reply('Contesta este mensaje con tu huso horario en formato UTC+h. \nEjemplos: UTC+4, UTC-5, UTC+9, UTC+10.', { reply_markup: { force_reply: true } }))
     .row()
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
