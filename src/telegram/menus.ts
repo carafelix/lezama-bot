@@ -2,7 +2,6 @@ import { Menu } from "@grammyjs/menu";
 import { Lezama } from "./bot";
 import { readAdminData, writeAdminData } from "../lib/database/handleDatabases";
 import { rand } from "../utils/utils";
-import { Chat } from "grammy/types";
 
 const landingText =
     `<b>Lezama - Poesía a domicilio</b>
@@ -120,7 +119,7 @@ export const settings = {
 const infoText =
     `<b>Información</b>
 
-Este bot esta construido sobre los Webhooks de Telegram en conjunto con Cloudflare Workers, un servicio de funciones anónimas alojadas en multiples servidores a lo largo del globo, conectándote siempre al más cercano y evitando los costos de mantener un server prendido 24/7.
+Este bot esta construido sobre los Webhooks de Telegram en conjunto con Cloudflare Workers, un proveedor de funciones anónimas encima del Edge runtime 
 
 El telegram bot framework es Grammy, el cual cuenta con muy buena documentación y un gran abanico de herramientas, incluido hosting gratis para la data de sesión. 
 

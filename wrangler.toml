@@ -7,4 +7,4 @@ workers_dev = true
 port = 8080
 
 [triggers]
-crons = ["30 13 * * *"]
+crons = ["0 * * * *"]

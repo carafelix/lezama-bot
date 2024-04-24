@@ -23,6 +23,7 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
 
           if (userSession.randomHour) {
             const randomHour = rand(24) + 1
+            // why im duping the write to 2 places everywhere? this could get de-sync
             userSession.cronHour = randomHour
             adminData.users[userSession.chatID] = randomHour
           }
