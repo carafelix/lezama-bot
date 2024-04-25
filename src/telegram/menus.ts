@@ -25,7 +25,7 @@ const landingMenu = new Menu<Lezama>('landing')
             try {
                 const adminData = await readAdminData(c)
                 if (c.session.subscribed) {
-                    adminData.users[`${c.session.chatID}`] = (c.session.cronHour - c.session.timezone) % 24;
+                    adminData.users[`${c.session.chatID}`] = (c.session.cronHour + c.session.timezone + 24) % 24;
                     await writeAdminData(c, adminData)
                 } else {
                     adminData.users[`${c.session.chatID}`] = false;
@@ -85,7 +85,7 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                 .text(`${i < 10 ? '0' : ''}${i}:00`,
                     async (c) => {
                         c.session.randomHour = false
-                        const newHour = (i - c.session.timezone) % 24
+                        const newHour = (i + c.session.timezone + 24) % 24
                         c.session.cronHour = newHour
                         
                         const adminData = await readAdminData(c)
@@ -123,7 +123,7 @@ const configQueueMenu = new Menu<Lezama>('config-queue')
     .text(  (c) => !c.session.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos',
             async (c) => {
                 if(!c.session.visited) c.session.visited = [];
-
+                
                 c.session.includeMiddies = !c.session.includeMiddies
                 if(c.session.includeMiddies){
                     c.session.allPoems = allIDs
