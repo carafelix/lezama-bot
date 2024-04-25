@@ -1,7 +1,9 @@
 import { Menu } from "@grammyjs/menu";
 import { Lezama } from "./bot";
 import { readAdminData, writeAdminData } from "../lib/database/handleDatabases";
-import { rand } from "../utils/utils";
+import { rand, shuffleArray } from "../utils/utils";
+import { allIDs, shortiesIDs, middliesIDs } from "../data/poemsIDs";
+
 
 const landingText =
     `<b>Lezama - Poesía a domicilio</b>
@@ -114,7 +116,31 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
+const configQueueText = 'Configura tu cola'
+const configQueueMenu = new Menu<Lezama>('config-queue')
+    .text(  (c) => !c.session.includeMiddies ? 'Activar extensos' : 'Desactivar extensos',
+            (c) => {
+
+                if(!c.session.visited) c.session.visited = [];
+
+                c.session.includeMiddies = !c.session.includeMiddies
+                if(c.session.includeMiddies){
+                    c.session.allPoems = allIDs
+                    c.session.queue = shuffleArray(
+                        allIDs.filter( (id) => !c.session.visited.includes(id) )
+                    )
+                } else {
+                    c.session.allPoems = shortiesIDs
+                    c.session.queue = shuffleArray(
+                        shortiesIDs.filter( (id) => !c.session.visited.includes(id) )
+                    )
+                }
+                console.log(c.session.queue)
+                console.log(c.session.queue.length)
+            })
+
 settingsMenu.register(selectSubscribeHour)
+settingsMenu.register(configQueueMenu)
 
 export const settings = {
     menu: settingsMenu,

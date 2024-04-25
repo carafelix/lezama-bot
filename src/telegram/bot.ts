@@ -6,8 +6,8 @@ import {
   info,
   landing
 } from './menus';
-import shortiesIDs from '../data/shorties.json'
-import { writeAdminData, composedFetch, readAdminData } from '../lib/database/handleDatabases';
+import { shortiesIDs } from '../data/poemsIDs'
+import { composedFetch } from '../lib/database/handleDatabases';
 import { freeStorage } from "@grammyjs/storage-free";
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
 import { Menu, MenuFlavor } from '@grammyjs/menu';
@@ -31,9 +31,11 @@ function getBot(env: Env) {
       subscribed: false,
       allPoems: shortiesIDs,
       queue: shuffleArray(shortiesIDs),
+      visited: [],
       cronHour: 13,
       randomHour: false,
-      timezone: -4
+      timezone: -4,
+      includeMiddies: false
     }),
     storage: freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
   }));

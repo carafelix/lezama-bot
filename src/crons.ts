@@ -32,13 +32,17 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
           if (!poemID) {
             userSession.queue = shuffleArray(userSession.allPoems.slice())
             poemID = userSession.queue.shift()
+            userSession.visited = []
           }
-          const poem = await composedFetch(env, 'short-poems', 'findOne', {
+          const poem = await composedFetch(env, 'poems', 'findOne', {
             filter: {
               "_id": poemID
             }
           }) as MongoResponse
           await bot.api.sendMessage(user, formatPoems(poem.document))
+
+          userSession.visited.push(poemID!)
+
           await freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).write(user, userSession)
         }
         catch (err) {
