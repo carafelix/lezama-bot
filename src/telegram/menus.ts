@@ -71,7 +71,8 @@ Aquí podrás configurar:
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
     .submenu('Seleccionar hora', 'select-suscribe-hour-menu', (c) => c.editMessageText(selectSubscribeHourText(c)))
-    .submenu('Configurar cola', 'config-queue')
+    .submenu('Configurar cola', 'config-queue', (c) =>  c.editMessageText(configQueueText, {parse_mode: 'HTML'})
+)
 
 const selectSubscribeHourText = (c: Lezama) => {
     if (c.session.timezone == undefined) c.session.timezone = 0;
@@ -116,11 +117,11 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
-const configQueueText = 'Configura tu cola'
+const configQueueText = 
+`<b>Configura tu cola de poemas</b>`
 const configQueueMenu = new Menu<Lezama>('config-queue')
-    .text(  (c) => !c.session.includeMiddies ? 'Activar extensos' : 'Desactivar extensos',
-            (c) => {
-
+    .text(  (c) => !c.session.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos',
+            async (c) => {
                 if(!c.session.visited) c.session.visited = [];
 
                 c.session.includeMiddies = !c.session.includeMiddies
@@ -135,9 +136,10 @@ const configQueueMenu = new Menu<Lezama>('config-queue')
                         shortiesIDs.filter( (id) => !c.session.visited.includes(id) )
                     )
                 }
-                console.log(c.session.queue)
-                console.log(c.session.queue.length)
-            })
+                c.menu.update()
+            },
+        )
+        .back('Volver', async (c)=> await c.editMessageText(settingsText, {parse_mode: 'HTML'}))
 
 settingsMenu.register(selectSubscribeHour)
 settingsMenu.register(configQueueMenu)
