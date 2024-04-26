@@ -1,14 +1,14 @@
 import { webhookCallback } from 'grammy';
 import getBot from './telegram/bot';
 import { dispatchTelegram } from './crons';
+import { Env } from './main';
 
 export default {
 
   async fetch(req: Request, env: Env, c: ExecutionContext) {
     let response = new Response('Bot initialization failed or... who are you?')
-
     try {
-      const bot = getBot(env)
+      const bot = await getBot(env)
       response = await webhookCallback(bot, 'cloudflare-mod')(req)
     }
     catch (err) {

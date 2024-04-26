@@ -1,33 +1,31 @@
 import getBot from './telegram/bot';
-import { freeStorage } from '@grammyjs/storage-free';
-import { composedFetch, readAdminData, writeAdminData } from './lib/database/handleDatabases';
+import { composedFetch } from './lib/database/mongo';
 import { formatPoems } from './utils/format-poems';
 import { shuffleArray } from './utils/shuffle-arr';
 import { rand } from './utils/utils';
+import { Env, AdminData, SessionData, MongoResponse, Mixin } from './main';
+import { D1Adapter, KvAdapter } from '@grammyjs/storage-cloudflare';
 
 export async function dispatchTelegram(e: ScheduledController, env: Env, c: ExecutionContext) {
   switch (e.cron) {
     case "0 * * * *":
-      const bot = getBot(env)
-      const adminData = await freeStorage<AdminData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
-            .read(env.FREE_STORAGE_SECRET_KEY)
-      for (const user in adminData.users) {
+      const bot = await getBot(env)
+      const users = await new KvAdapter(env.KV_LEZAMA).readAllKeys()
+      const db_Sessions = await D1Adapter.create<SessionData>(env.D1_LEZAMA, 'sessions')
+
+      for await (const user of users) {
         try {
-          // more optimal would be to store the users in a cron collection,
-          // and in each hour key store the users that are register to that hour
-          if (adminData.users[user] === false ||
-            adminData.users[user] !== new Date(e.scheduledTime).getUTCHours()) {
+          const userSession = await db_Sessions.read(user)
+
+          if (!userSession ||
+              userSession.cronHour !== new Date(e.scheduledTime).getUTCHours()) {
             continue
           }
-          const userSession = await freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).read(user)
 
           if (userSession.randomHour) {
             const randomHour = rand(24) + 1
-            // why im duping the write to 2 places everywhere? this could get de-sync
             userSession.cronHour = randomHour
-            adminData.users[userSession.chatID] = randomHour
           }
-
           let poemID = userSession.queue.shift()
           if (!poemID) {
             userSession.queue = shuffleArray(userSession.allPoems.slice())
@@ -39,17 +37,16 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
               "_id": poemID
             }
           }) as MongoResponse
+          
           await bot.api.sendMessage(user, formatPoems(poem.document))
-
           userSession.visited.push(poemID!)
 
-          await freeStorage<SessionData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN }).write(user, userSession)
+          db_Sessions.write(user,userSession)
         }
+
         catch (err) {
-          console.log('inside err:', err);
+              console.trace(err);
         }
       }
-      await freeStorage<AdminData>(bot.token, { jwt: env.FREE_STORAGE_TOKEN })
-            .write(env.FREE_STORAGE_SECRET_KEY, adminData)
   }
 }

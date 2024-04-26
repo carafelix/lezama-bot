@@ -1,8 +1,9 @@
 import { Menu } from "@grammyjs/menu";
 import { Lezama } from "./bot";
-import { readAdminData, writeAdminData } from "../lib/database/handleDatabases";
 import { rand, shuffleArray } from "../utils/utils";
 import { allIDs, shortiesIDs, middliesIDs } from "../data/poemsIDs";
+import { D1Adapter } from "@grammyjs/storage-cloudflare";
+import { SessionData } from "../main";
 
 
 const landingText =
@@ -20,30 +21,20 @@ Pulsa el botón de abajo y comenzaras a recibir un poema al día`
 
 const landingMenu = new Menu<Lezama>('landing')
     .text(async (c) => {
-        const session = await c.session
-        return session.subscribed ? 'Pausar' : 'Suscríbete!'
+        const subscribed = await c.kv.read(`${c.chat?.id || await c.session.chatID}`)
+        return subscribed ? 'Pausar' : 'Suscríbete!'
     },
         async (c, next) => {
             const session = await c.session
-            session.subscribed = !session.subscribed
-            try {
-                const adminData = await readAdminData(c)
-                if (session.subscribed) {
-                    adminData.users[`${session.chatID}`] = (session.cronHour - session.timezone + 24) % 24;
-                    await writeAdminData(c, adminData)
-                } else {
-                    adminData.users[`${session.chatID}`] = false;
-                    await writeAdminData(c, adminData)
-                }
-            } catch (err) {
-                await c.reply('An error ocurred while writing your preference')
+
+            const subscribed = await c.kv.read(`${session.chatID}`)
+            if(!subscribed){
+                await c.kv.write(`${session.chatID}`, `${session.chatID}`)
+            } else {
+                await c.kv.delete(`${session.chatID}`)
             }
-            await next()
-        },
-        async (c) => {
-            const session = await c.session
             c.menu.update()
-            await c.reply(session.subscribed ? 'Welcome to the Paradiso' : 'Running away, uh?')
+            await c.reply( await c.kv.read(`${session.chatID}`) ? 'Welcome to the Paradiso' : 'Running away, uh?')
         }
     )
 
@@ -94,10 +85,6 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                         session.randomHour = false
                         const newHour = (i - session.timezone + 24) % 24
                         session.cronHour = newHour
-                        
-                        const adminData = await readAdminData(c)
-                        adminData.users[session.chatID] = newHour
-                        await writeAdminData(c, adminData)
                         await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${session.timezone > 0 ? '+' + session.timezone : '' + session.timezone}`)
                     })
 
@@ -112,9 +99,6 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
         session.randomHour = true
         const randomHour = rand(24) + 1
         session.cronHour = randomHour
-        const adminData = await readAdminData(c)
-        adminData.users[session.chatID] = randomHour
-        await writeAdminData(c, adminData)
         await c.reply('Poemas programados a hora random para cada dia')
     })
     // this should be 'Cambiar Huso horario' with a reply msg with your current time

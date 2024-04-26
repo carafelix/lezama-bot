@@ -1,3 +1,5 @@
+import { KVNamespace } from "@cloudflare/workers-types"
+import { D1Adapter, KvAdapter } from "@grammyjs/storage-cloudflare"
 interface Env {
   BOT_TOKEN: string
   BOT_INFO: string
@@ -6,13 +8,15 @@ interface Env {
   MONGO_API_ENDPOINT: string
   MONGO_APP_ID: string
   FREE_STORAGE_TOKEN: string
-  FREE_STORAGE_SECRET_KEY: string
-  MY_KV_NAMESPACE: KVNamespace<string>
+  ADMIN_DATA_KEY: string
+  D1_LEZAMA: D1Database
+  KV_LEZAMA: KVNamespace
   DEVELOPER_ID: string
 }
 
-interface envWrapper{
+interface Mixin{
   env: Env
+  kv: KvAdapter<string>
 }
 
 interface MongoResponse {
@@ -36,7 +40,6 @@ interface BookDocument {
 
 interface SessionData {
   chatID: number,
-  subscribed: boolean,
   allPoems: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
   visited: PoemDocument["_id"][],

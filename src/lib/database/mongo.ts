@@ -1,5 +1,5 @@
-import { freeStorage } from "@grammyjs/storage-free";
 import { Lezama } from "../../telegram/bot";
+import { Env, AdminData } from "../../main";
 
 export async function composedFetch(env : Env ,collection : string, action : string, opts? : object){
     try{
@@ -25,12 +25,4 @@ export async function composedFetch(env : Env ,collection : string, action : str
     catch(e){
         console.log(e);
     }
-}
-
-export async function readAdminData(c : Lezama){
-    const adminData = (await freeStorage<AdminData>(c.env.BOT_TOKEN, { jwt: c.env.FREE_STORAGE_TOKEN }).read((c.env.FREE_STORAGE_SECRET_KEY)))
-    return adminData
-}
-export async function writeAdminData(c : Lezama, data : AdminData){
-    await freeStorage<AdminData>(c.env.BOT_TOKEN, { jwt: c.env.FREE_STORAGE_TOKEN }).write(c.env.FREE_STORAGE_SECRET_KEY, data);
 }

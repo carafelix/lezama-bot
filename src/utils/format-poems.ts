@@ -1,3 +1,5 @@
+import { PoemDocument } from "../main";
+
 export function formatPoems(poem: PoemDocument, chunk?: number) {
     return (
 `${poem.title}
