@@ -17,8 +17,8 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
         try {
           const userSession = await db_Sessions.read(user)
 
-          if (!userSession
-            // userSession.cronHour !== new Date(e.scheduledTime).getUTCHours()
+          if (!userSession ||
+            userSession.cronHour !== new Date(e.scheduledTime).getUTCHours()
           ) {
             continue
           }
