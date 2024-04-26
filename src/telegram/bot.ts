@@ -96,13 +96,13 @@ async function getBot(env: Env) {
       }
     })
 
-  bot.command("registeredUsers", async (c: Lezama, next) => {
+  bot.command("usercount", async (c: Lezama, next) => {
     if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
       let count = 0
       for await (const user of c.kv.readAllKeys()) {
         count++
       }
-      c.reply(
+      await c.reply(
         '' + count
       )
     } else {
