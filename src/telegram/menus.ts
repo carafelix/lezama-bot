@@ -19,16 +19,20 @@ Si deseas contribuir o conocer la arquitectura del bot, todo aquello lo encontra
 Pulsa el botón de abajo y comenzaras a recibir un poema al día`
 
 const landingMenu = new Menu<Lezama>('landing')
-    .text((c) => c.session.subscribed ? 'Pausar' : 'Suscríbete!',
+    .text(async (c) => {
+        const session = await c.session
+        return session.subscribed ? 'Pausar' : 'Suscríbete!'
+    },
         async (c, next) => {
-            c.session.subscribed = !c.session.subscribed
+            const session = await c.session
+            session.subscribed = !session.subscribed
             try {
                 const adminData = await readAdminData(c)
-                if (c.session.subscribed) {
-                    adminData.users[`${c.session.chatID}`] = (c.session.cronHour - c.session.timezone + 24) % 24;
+                if (session.subscribed) {
+                    adminData.users[`${session.chatID}`] = (session.cronHour - session.timezone + 24) % 24;
                     await writeAdminData(c, adminData)
                 } else {
-                    adminData.users[`${c.session.chatID}`] = false;
+                    adminData.users[`${session.chatID}`] = false;
                     await writeAdminData(c, adminData)
                 }
             } catch (err) {
@@ -37,8 +41,9 @@ const landingMenu = new Menu<Lezama>('landing')
             await next()
         },
         async (c) => {
+            const session = await c.session
             c.menu.update()
-            await c.reply(c.session.subscribed ? 'Welcome to the Paradiso' : 'Running away, uh?')
+            await c.reply(session.subscribed ? 'Welcome to the Paradiso' : 'Running away, uh?')
         }
     )
 
@@ -70,13 +75,14 @@ Aquí podrás configurar:
     - Ordenarla por fecha de publicación, por orden alfabético o en aleatorio.
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
-    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', (c) => c.editMessageText(selectSubscribeHourText(c)))
+    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', async (c) => await c.editMessageText(await selectSubscribeHourText(c)))
     .submenu('Configurar cola', 'config-queue', (c) =>  c.editMessageText(configQueueText, {parse_mode: 'HTML'})
 )
 
-const selectSubscribeHourText = (c: Lezama) => {
-    if (c.session.timezone == undefined) c.session.timezone = 0;
-    return `Selecciona la hora, en UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone}, a la que quieres recibir el diario placer`
+const selectSubscribeHourText =  async (c: Lezama) => {
+    const session = await c.session
+    if (session.timezone == undefined) session.timezone = 0;
+    return `Selecciona la hora, en UTC${session.timezone > 0 ? '+' + session.timezone : '' + session.timezone}, a la que quieres recibir el diario placer`
 }
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
@@ -84,14 +90,15 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
             range
                 .text(`${i < 10 ? '0' : ''}${i}:00`,
                     async (c) => {
-                        c.session.randomHour = false
-                        const newHour = (i - c.session.timezone + 24) % 24
-                        c.session.cronHour = newHour
+                        const session = await c.session
+                        session.randomHour = false
+                        const newHour = (i - session.timezone + 24) % 24
+                        session.cronHour = newHour
                         
                         const adminData = await readAdminData(c)
-                        adminData.users[c.session.chatID] = newHour
+                        adminData.users[session.chatID] = newHour
                         await writeAdminData(c, adminData)
-                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${c.session.timezone > 0 ? '+' + c.session.timezone : '' + c.session.timezone}`)
+                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${session.timezone > 0 ? '+' + session.timezone : '' + session.timezone}`)
                     })
 
             if (i % 4 == 0) {
@@ -101,11 +108,12 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     })
     .row()
     .text('Random', async (c) => {
-        c.session.randomHour = true
+        const session = await c.session
+        session.randomHour = true
         const randomHour = rand(24) + 1
-        c.session.cronHour = randomHour
+        session.cronHour = randomHour
         const adminData = await readAdminData(c)
-        adminData.users[c.session.chatID] = randomHour
+        adminData.users[session.chatID] = randomHour
         await writeAdminData(c, adminData)
         await c.reply('Poemas programados a hora random para cada dia')
     })
@@ -120,20 +128,24 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
 const configQueueText = 
 `<b>Configura tu cola de poemas</b>`
 const configQueueMenu = new Menu<Lezama>('config-queue')
-    .text(  (c) => !c.session.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos',
+    .text(  async (c) => {
+        const session = await c.session
+        return !session.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos'
+    },
             async (c) => {
-                if(!c.session.visited) c.session.visited = [];
+                const session = await c.session
+                if(!session.visited) session.visited = [];
                 
-                c.session.includeMiddies = !c.session.includeMiddies
-                if(c.session.includeMiddies){
-                    c.session.allPoems = allIDs
-                    c.session.queue = shuffleArray(
-                        allIDs.filter( (id) => !c.session.visited.includes(id) )
+                session.includeMiddies = !session.includeMiddies
+                if(session.includeMiddies){
+                    session.allPoems = allIDs
+                    session.queue = shuffleArray(
+                        allIDs.filter( (id) => !session.visited.includes(id) )
                     )
                 } else {
-                    c.session.allPoems = shortiesIDs
-                    c.session.queue = shuffleArray(
-                        shortiesIDs.filter( (id) => !c.session.visited.includes(id) )
+                    session.allPoems = shortiesIDs
+                    session.queue = shuffleArray(
+                        shortiesIDs.filter( (id) => !session.visited.includes(id) )
                     )
                 }
                 c.menu.update()
@@ -169,8 +181,6 @@ const infoMenu = new Menu<Lezama>('info-menu')
 
 const todoText =
     `<b> To-do's</b>
-
-Tengo aún que migrar la data de sesión a Mongo, pero al parecer tiene más latencia que el FreeStorage.
 
 Quizá en un futuro lo integre dentro de Hono, un Web Framework ligero, para montarlo también a Discord e Instagram.
 

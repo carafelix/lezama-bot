@@ -1,4 +1,4 @@
-import { Bot, CommandContext, Context, InlineKeyboard, SessionFlavor, session } from 'grammy';
+import { Bot, CommandContext, Context, InlineKeyboard, SessionFlavor, lazySession, session } from 'grammy';
 import {
   settings,
   menus,
@@ -25,7 +25,7 @@ function getBot(env: Env) {
     await next();
   })
 
-  bot.use(session({
+  bot.use(lazySession({
     initial: () => ({
       chatID: 0,
       subscribed: false,
@@ -46,7 +46,8 @@ function getBot(env: Env) {
   // Commands 
 
   bot.command('start', async (c) => {
-    if (!c.session.chatID) c.session.chatID = c.chat.id;
+    const session = await c.session
+    if (!session.chatID) session.chatID = c.chat.id;
     await replyWithMenu(c, landing.text, landing.menu)
   })
 
@@ -56,13 +57,15 @@ function getBot(env: Env) {
   bot.command('settings', async (c) => await replyWithMenu(c, settings.text, settings.menu))
 
   bot.command('resetqueue', async c => {
-    c.session.queue = shuffleArray(c.session.allPoems.slice())
+    const session = await c.session
+    session.queue = shuffleArray(session.allPoems.slice())
     await c.reply('Queue reset')
   })
   bot.command('randompoem', async (c) => {
+    const session = await c.session
     const poem = await composedFetch(env, 'short-poems', 'findOne', {
       filter: {
-        "_id": c.session.allPoems[rand(c.session.allPoems.length)]
+        "_id": session.allPoems[rand(session.allPoems.length)]
       }
     }) as MongoResponse
 
@@ -76,10 +79,11 @@ function getBot(env: Env) {
   })
 
   bot.hears( /^(GMT|UTC)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/ , 
-      (c) => {
+      async (c) => {
+        const session = await c.session
         const offset = c.message?.text?.slice(3)
         if(offset){
-          c.session.timezone = +offset
+          session.timezone = +offset
           c.reply('Cambio de huso horario exitoso a UTC' + offset)
         }
       })
