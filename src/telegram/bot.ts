@@ -35,14 +35,11 @@ async function getBot(env: Env) {
       queue: shuffleArray(shortiesIDs),
       visited: [],
       cronHour: 13,
-      randomHour: false,
       timezone: -4,
       includeMiddies: false
     }),
     storage: db_Sessions
   }));
-
-
 
   menus.forEach(menu => bot.use(menu.menu))
 
@@ -66,7 +63,6 @@ async function getBot(env: Env) {
   bot.command('resetqueue', async c => {
     const session = await c.session
     session.queue = shuffleArray(session.allPoems.slice())
-    console.log(session.queue)
     await c.reply('Queue reset')
   })
   bot.command('randompoem', async (c) => {

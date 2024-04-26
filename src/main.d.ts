@@ -16,7 +16,7 @@ interface Env {
 
 interface Mixin{
   env: Env
-  kv: KvAdapter<string>
+  kv: KvAdapter
 }
 
 interface MongoResponse {
@@ -44,7 +44,6 @@ interface SessionData {
   queue: PoemDocument["_id"][],
   visited: PoemDocument["_id"][],
   cronHour: Date.getUTCHours,
-  randomHour: boolean,
   timezone: number,
   includeMiddies: boolean,
 }

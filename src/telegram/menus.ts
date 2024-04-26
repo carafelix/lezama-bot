@@ -26,12 +26,21 @@ const landingMenu = new Menu<Lezama>('landing')
     },
         async (c, next) => {
             const session = await c.session
+            let allSubscribersAtThisHour = await c.kv.read(`${session.cronHour}`)
+            if(!allSubscribersAtThisHour) allSubscribersAtThisHour = {};
 
-            const subscribed = await c.kv.read(`${session.chatID}`)
-            if(!subscribed){
-                await c.kv.write(`${session.chatID}`, `${session.chatID}`)
+            if(!allSubscribersAtThisHour[`${ session.chatID}`]){
+                allSubscribersAtThisHour[`${session.chatID}`] = true;
+               
+                console.log(allSubscribersAtThisHour)
+                await c.kv.write(`${session.cronHour}`, `${allSubscribersAtThisHour}`)
+
             } else {
-                await c.kv.delete(`${session.chatID}`)
+                delete allSubscribersAtThisHour[`${session.chatID}`]
+                
+                console.log(allSubscribersAtThisHour)
+
+                await c.kv.write(`${session.cronHour}`)
             }
             c.menu.update()
             await c.reply( await c.kv.read(`${session.chatID}`) ? 'Welcome to the Paradiso' : 'Running away, uh?')
@@ -82,9 +91,19 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                 .text(`${i < 10 ? '0' : ''}${i}:00`,
                     async (c) => {
                         const session = await c.session
-                        session.randomHour = false
+
+                        const oldCronHour = session.cronHour
                         const newHour = (i - session.timezone + 24) % 24
                         session.cronHour = newHour
+
+                        const allSubscribersAtOldHour = await c.kv.read(`cron-${oldCronHour}`)
+                        delete allSubscribersAtOldHour[`${session.chatID}`]
+                        await c.kv.write(`cron-${oldCronHour}`, allSubscribersAtOldHour)
+
+                        const allSubscribersAtNewHour = await c.kv.read[`cron-${session.cronHour}`]
+                        allSubscribersAtNewHour[`${session.chatID}`] = true
+                        await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtNewHour)
+
                         await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${session.timezone > 0 ? '+' + session.timezone : '' + session.timezone}`)
                     })
 
@@ -94,13 +113,6 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
         }
     })
     .row()
-    .text('Random', async (c) => {
-        const session = await c.session
-        session.randomHour = true
-        const randomHour = rand(24) + 1
-        session.cronHour = randomHour
-        await c.reply('Poemas programados a hora random para cada dia')
-    })
     // this should be 'Cambiar Huso horario' with a reply msg with your current time
     .text((c) => `Cambiar huso horario`,
         (c) => c.reply('Contesta este mensaje con tu huso horario en formato UTC+h, en numero enteros. \nEjemplos: UTC+4, UTC-5, UTC+9, UTC+10.', { reply_markup: { force_reply: true } }))

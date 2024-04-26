@@ -10,23 +10,20 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
   switch (e.cron) {
     case "0 * * * *":
       const bot = await getBot(env)
-      const users = await new KvAdapter(env.KV_LEZAMA).readAllKeys()
+      const currentHour = new Date(e.scheduledTime).getUTCHours()
+
+      const subscribersAtThisHour = await new KvAdapter(env.KV_LEZAMA).read(`cron-${currentHour}`) as object
       const db_Sessions = await D1Adapter.create<SessionData>(env.D1_LEZAMA, 'sessions')
 
-      for await (const user of users) {
+      for (const user in subscribersAtThisHour) {
         try {
           const userSession = await db_Sessions.read(user)
-
           if (!userSession ||
-            userSession.cronHour !== new Date(e.scheduledTime).getUTCHours()
+            userSession.cronHour !== currentHour
           ) {
             continue
           }
 
-          if (userSession.randomHour) {
-            const randomHour = rand(24) + 1
-            userSession.cronHour = randomHour
-          }
           let poemID = userSession.queue.shift()
           if (!poemID) {
             userSession.queue = shuffleArray(userSession.allPoems.slice())
@@ -39,8 +36,8 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
             }
           }) as MongoResponse
           await bot.api.sendMessage(user, formatPoems(poem.document))
-          userSession.visited.push(poemID!)
 
+          userSession.visited.push(poemID!)
           db_Sessions.write(user, userSession)
         }
 
