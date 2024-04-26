@@ -3,7 +3,7 @@ import { composedFetch } from './lib/database/mongo';
 import { formatPoems } from './utils/format-poems';
 import { shuffleArray } from './utils/shuffle-arr';
 import { rand } from './utils/utils';
-import { Env, AdminData, SessionData, MongoResponse, Mixin } from './main';
+import { Env, SessionData, MongoResponse } from './main';
 import { D1Adapter, KvAdapter } from '@grammyjs/storage-cloudflare';
 
 export async function dispatchTelegram(e: ScheduledController, env: Env, c: ExecutionContext) {
@@ -17,8 +17,9 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
         try {
           const userSession = await db_Sessions.read(user)
 
-          if (!userSession ||
-              userSession.cronHour !== new Date(e.scheduledTime).getUTCHours()) {
+          if (!userSession
+            // userSession.cronHour !== new Date(e.scheduledTime).getUTCHours()
+          ) {
             continue
           }
 
@@ -37,15 +38,14 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
               "_id": poemID
             }
           }) as MongoResponse
-          
           await bot.api.sendMessage(user, formatPoems(poem.document))
           userSession.visited.push(poemID!)
 
-          db_Sessions.write(user,userSession)
+          db_Sessions.write(user, userSession)
         }
 
         catch (err) {
-              console.trace(err);
+          console.trace(err);
         }
       }
   }

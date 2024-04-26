@@ -47,7 +47,7 @@ export const landing = {
 
 export const helpText =
     `/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
-/settings - Accede al menu de configuraciones.
+/settings - Accede al menu de configuraciones, toggle poemas largos, libros, autores, ordenar tu cola, etc.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
 /resetqueue - Reinicia tu cola de poemas personal y la revuelve.
@@ -110,7 +110,9 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
 
 
 const configQueueText = 
-`<b>Configura tu cola de poemas</b>`
+`<b>Configura tu cola de poemas</b>
+
+Por defecto incluye solo los poemas de menos de mil caracteres. Activando la opción de poemas largos incluye hasta el tope de 4096 caracteres.`
 const configQueueMenu = new Menu<Lezama>('config-queue')
     .text(  async (c) => {
         const session = await c.session
@@ -148,11 +150,11 @@ export const settings = {
 const infoText =
     `<b>Información</b>
 
-Este bot esta construido sobre los Webhooks de Telegram en conjunto con Cloudflare Workers, un proveedor de funciones anónimas encima del Edge runtime 
+Este bot esta construido sobre los Webhooks de Telegram en conjunto con Cloudflare Workers, un proveedor de funciones anónimas encima del Edge runtime.
 
 El telegram bot framework es Grammy, el cual cuenta con muy buena documentación y un gran abanico de herramientas, incluido hosting gratis para la data de sesión. 
 
-Para el hosting de los poemas usa MongoDB Atlas.
+Para el hosting de los poemas usa MongoDB Atlas. Para el hosting de la data de session usa una database SQL, D1, de Cloudflare, en conjunto con KV, un sistema de almacenamiento rápido, también de Cloudflare, para chequear los usuarios con suscripción activa.
 
 Puedes encontrar el código fuente en Github, y si deseas contribuir o comunicarme alguna idea, me puedes contactar al telegram en 'Contacto' o abrir un Issue en Github. 
 `
@@ -169,6 +171,7 @@ const todoText =
 Quizá en un futuro lo integre dentro de Hono, un Web Framework ligero, para montarlo también a Discord e Instagram.
 
 Estoy pensando en quizá habilitar la posibilidad para que cada usuario pueda agregar poemas a su lista, me cuentan.
+Ahora que la database esta en D1, los poemas custom podrían guardarse en los datos de session.
 `
 const todo = new Menu<Lezama>('todo-menu')
     .back('Volver',
