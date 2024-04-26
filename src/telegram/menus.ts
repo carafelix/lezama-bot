@@ -79,8 +79,8 @@ const settingsMenu = new Menu<Lezama>('settings-menu')
 
 const selectSubscribeHourText = async (c: Lezama) => {
     const session = await c.session
-    if (session.timezone == undefined) session.timezone = 0;
-    return `Selecciona la hora a la que quieres recibir el diario placer. Actual: ${(session.cronHour - session.timezone) < 10 ? '0' : ''}${(session.cronHour - session.timezone + 24 ) % 24 }:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}.`
+    const displayHour = session.cronHour + session.timezone
+    return `Selecciona la hora a la que quieres recibir el diario placer. Actual: ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}.`
 }
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
@@ -104,8 +104,7 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                         }
                         allSubscribersAtNewHour[`${session.chatID}`] = true
                         await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtNewHour)
-
-                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}`)
+                        await c.editMessageText(await selectSubscribeHourText(c))
                     })
 
             if (i % 4 == 0) {
