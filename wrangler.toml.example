@@ -1,0 +1,19 @@
+name = "lezama"
+main = "src/index.ts"
+compatibility_date = "2024-04-14"
+workers_dev = true
+
+kv_namespaces = [
+    { binding = "KV_LEZAMA", id = "<kv_id>" }
+]
+
+[[d1_databases]]
+binding = "D1_LEZAMA"
+database_name = "lezama"
+database_id = "<d1_id>"
+
+[dev]
+port = 8080
+
+[triggers]
+crons = ["0 * * * *"]
