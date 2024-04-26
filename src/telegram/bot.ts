@@ -11,6 +11,7 @@ import { composedFetch } from '../lib/database/handleDatabases';
 import { freeStorage } from "@grammyjs/storage-free";
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
 import { Menu, MenuFlavor } from '@grammyjs/menu';
+import { KvAdapter } from '@grammyjs/storage-cloudflare/dist/kv';
 
 export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor & envWrapper;
 

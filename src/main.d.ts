@@ -7,6 +7,8 @@ interface Env {
   MONGO_APP_ID: string
   FREE_STORAGE_TOKEN: string
   FREE_STORAGE_SECRET_KEY: string
+  MY_KV_NAMESPACE: KVNamespace<string>
+  DEVELOPER_ID: string
 }
 
 interface envWrapper{

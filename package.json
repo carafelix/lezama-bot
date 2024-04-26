@@ -9,7 +9,6 @@
     "start": "wrangler dev",
     "testCron": "curl http://localhost:8080/__scheduled?cron=0+*+*+*+* | { cat; echo; }",
     "deployWebhook": "grep -E '^(BOT_TOKEN|DEPLOY_URI)=' ./.dev.vars | awk -F= '/^BOT_TOKEN=/{bot_token=$2} /^DEPLOY_URI=/{deploy_uri=$2} END{printf \"https://api.telegram.org/bot%s/setWebhook?url=%s\", bot_token, deploy_uri}' | xargs -I {} curl -X GET {} | { cat; echo; }"
-    
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20240405.0",
@@ -19,9 +18,7 @@
   },
   "dependencies": {
     "@grammyjs/menu": "github:grammyjs/menu",
-    "@grammyjs/storage-free": "^2.4.2",
-    "@grammyjs/storage-mongodb": "^2.4.2",
-    "grammy": "^1.22.4",
-    "realm-web": "^2.0.0"
+    "@grammyjs/storage-cloudflare": "^2.4.2",
+    "grammy": "^1.22.4"
   }
 }
