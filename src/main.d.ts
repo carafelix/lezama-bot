@@ -44,6 +44,7 @@ interface SessionData {
   queue: PoemDocument["_id"][],
   visited: PoemDocument["_id"][],
   cronHour: Date.getUTCHours,
+  subscribed: boolean
   timezone: number,
   includeMiddies: boolean,
 }

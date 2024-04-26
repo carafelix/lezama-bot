@@ -36,7 +36,8 @@ async function getBot(env: Env) {
       visited: [],
       cronHour: 13,
       timezone: -4,
-      includeMiddies: false
+      includeMiddies: false,
+      subscribed: false
     }),
     storage: db_Sessions
   }));
@@ -52,12 +53,15 @@ async function getBot(env: Env) {
   })
 
   bot.command('help', async c => {
-    const session = await c.session
     await c.reply(helpText)
   })
   bot.command('settings', async (c) => {
     const session = await c.session
-    await replyWithMenu(c, settings.text, settings.menu)
+    if(session.subscribed){
+      await replyWithMenu(c, settings.text, settings.menu)
+    } else {
+      await replyWithMenu(c, 'Te adelantas a tus propios pasos! Suscríbete primero :P', landing.menu)
+    }
   })
 
   bot.command('resetqueue', async c => {
@@ -92,14 +96,14 @@ async function getBot(env: Env) {
       }
     })
 
-  bot.command("activeUsers", async (c: Lezama, next) => {
+  bot.command("registeredUsers", async (c: Lezama, next) => {
     if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
-      const activeUsers = []
+      let count = 0
       for await (const user of c.kv.readAllKeys()) {
-        activeUsers.push(user)
+        count++
       }
       c.reply(
-        activeUsers.join(' ')
+        '' + count
       )
     } else {
       await next()

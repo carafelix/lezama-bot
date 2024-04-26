@@ -16,34 +16,32 @@ Este bot te permite:
 
 Puedes listar los comandos disponibles y todo lo necesario para el uso de este bot con /help.
 Si deseas contribuir o conocer la arquitectura del bot, todo aquello lo encontrarás en /info.
+Una vez suscrito puedes usar /settings.
 
 Pulsa el botón de abajo y comenzaras a recibir un poema al día`
 
 const landingMenu = new Menu<Lezama>('landing')
     .text(async (c) => {
-        const subscribed = await c.kv.read(`${c.chat?.id || await c.session.chatID}`)
-        return subscribed ? 'Pausar' : 'Suscríbete!'
+        const session = await c.session
+        return session.subscribed ? 'Pausar' : 'Suscríbete!'
     },
         async (c, next) => {
             const session = await c.session
-            let allSubscribersAtThisHour = await c.kv.read(`${session.cronHour}`)
-            if(!allSubscribersAtThisHour) allSubscribersAtThisHour = {};
-
-            if(!allSubscribersAtThisHour[`${ session.chatID}`]){
+            let allSubscribersAtThisHour = await c.kv.read(`cron-${session.cronHour}`)
+            if (!allSubscribersAtThisHour || typeof allSubscribersAtThisHour !== "object") {
+                allSubscribersAtThisHour = {}
+            }
+            if (!session.subscribed) {
                 allSubscribersAtThisHour[`${session.chatID}`] = true;
-               
-                console.log(allSubscribersAtThisHour)
-                await c.kv.write(`${session.cronHour}`, `${allSubscribersAtThisHour}`)
-
-            } else {
+                await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
+                session.subscribed = true
+            }
+            else {
                 delete allSubscribersAtThisHour[`${session.chatID}`]
-                
-                console.log(allSubscribersAtThisHour)
-
-                await c.kv.write(`${session.cronHour}`)
+                await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
+                session.subscribed = false
             }
             c.menu.update()
-            await c.reply( await c.kv.read(`${session.chatID}`) ? 'Welcome to the Paradiso' : 'Running away, uh?')
         }
     )
 
@@ -76,13 +74,13 @@ Aquí podrás configurar:
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
     .submenu('Seleccionar hora', 'select-suscribe-hour-menu', async (c) => await c.editMessageText(await selectSubscribeHourText(c)))
-    .submenu('Configurar cola', 'config-queue', (c) =>  c.editMessageText(configQueueText, {parse_mode: 'HTML'})
-)
+    .submenu('Configurar cola', 'config-queue', (c) => c.editMessageText(configQueueText, { parse_mode: 'HTML' })
+    )
 
-const selectSubscribeHourText =  async (c: Lezama) => {
+const selectSubscribeHourText = async (c: Lezama) => {
     const session = await c.session
     if (session.timezone == undefined) session.timezone = 0;
-    return `Selecciona la hora, en UTC${session.timezone > 0 ? '+' + session.timezone : '' + session.timezone}, a la que quieres recibir el diario placer`
+    return `Selecciona la hora, en UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}, a la que quieres recibir el diario placer`
 }
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
@@ -100,11 +98,14 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                         delete allSubscribersAtOldHour[`${session.chatID}`]
                         await c.kv.write(`cron-${oldCronHour}`, allSubscribersAtOldHour)
 
-                        const allSubscribersAtNewHour = await c.kv.read[`cron-${session.cronHour}`]
+                        let allSubscribersAtNewHour = await c.kv.read[`cron-${session.cronHour}`]
+                        if(!allSubscribersAtNewHour){
+                            allSubscribersAtNewHour = {}
+                        }
                         allSubscribersAtNewHour[`${session.chatID}`] = true
                         await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtNewHour)
 
-                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${session.timezone > 0 ? '+' + session.timezone : '' + session.timezone}`)
+                        await c.reply(`Poemas programados para las ${i < 10 ? 0 : ''}${i}:00 — UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}`)
                     })
 
             if (i % 4 == 0) {
@@ -121,35 +122,35 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
-const configQueueText = 
-`<b>Configura tu cola de poemas</b>
+const configQueueText =
+    `<b>Configura tu cola de poemas</b>
 
 Por defecto incluye solo los poemas de menos de mil caracteres. Activando la opción de poemas largos incluye hasta el tope de 4096 caracteres.`
 const configQueueMenu = new Menu<Lezama>('config-queue')
-    .text(  async (c) => {
+    .text(async (c) => {
         const session = await c.session
         return !session.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos'
     },
-            async (c) => {
-                const session = await c.session
-                if(!session.visited) session.visited = [];
-                
-                session.includeMiddies = !session.includeMiddies
-                if(session.includeMiddies){
-                    session.allPoems = allIDs
-                    session.queue = shuffleArray(
-                        allIDs.filter( (id) => !session.visited.includes(id) )
-                    )
-                } else {
-                    session.allPoems = shortiesIDs
-                    session.queue = shuffleArray(
-                        shortiesIDs.filter( (id) => !session.visited.includes(id) )
-                    )
-                }
-                c.menu.update()
-            },
-        )
-        .back('Volver', async (c)=> await c.editMessageText(settingsText, {parse_mode: 'HTML'}))
+        async (c) => {
+            const session = await c.session
+            if (!session.visited) session.visited = [];
+
+            session.includeMiddies = !session.includeMiddies
+            if (session.includeMiddies) {
+                session.allPoems = allIDs
+                session.queue = shuffleArray(
+                    allIDs.filter((id) => !session.visited.includes(id))
+                )
+            } else {
+                session.allPoems = shortiesIDs
+                session.queue = shuffleArray(
+                    shortiesIDs.filter((id) => !session.visited.includes(id))
+                )
+            }
+            c.menu.update()
+        },
+    )
+    .back('Volver', async (c) => await c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 settingsMenu.register(selectSubscribeHour)
 settingsMenu.register(configQueueMenu)
