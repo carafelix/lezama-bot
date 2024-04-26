@@ -80,7 +80,7 @@ const settingsMenu = new Menu<Lezama>('settings-menu')
 const selectSubscribeHourText = async (c: Lezama) => {
     const session = await c.session
     if (session.timezone == undefined) session.timezone = 0;
-    return `Selecciona la hora, en UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}, a la que quieres recibir el diario placer`
+    return `Selecciona la hora a la que quieres recibir el diario placer. Actual: ${(session.cronHour - session.timezone) < 10 ? '0' : ''}${session.cronHour - session.timezone}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}.`
 }
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
@@ -167,7 +167,7 @@ Este bot esta construido sobre los Webhooks de Telegram en conjunto con Cloudfla
 
 El telegram bot framework es Grammy, el cual cuenta con muy buena documentación y un gran abanico de herramientas, incluido hosting gratis para la data de sesión. 
 
-Para el hosting de los poemas usa MongoDB Atlas. Para el hosting de la data de session usa una database SQL, D1, de Cloudflare, en conjunto con KV, un sistema de almacenamiento rápido, también de Cloudflare, para chequear los usuarios con suscripción activa.
+Para el hosting de los poemas usa MongoDB Atlas. Para el hosting de la data de sesión usa una database SQL, D1, de Cloudflare, en conjunto con KV, un sistema de almacenamiento rápido, también de Cloudflare, para chequear los usuarios con suscripción activa.
 
 Puedes encontrar el código fuente en Github, y si deseas contribuir o comunicarme alguna idea, me puedes contactar al telegram en 'Contacto' o abrir un Issue en Github. 
 `
