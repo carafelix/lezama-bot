@@ -4,6 +4,7 @@ import { rand, shuffleArray } from "../utils/utils";
 import { allIDs, shortiesIDs, middliesIDs } from "../data/poemsIDs";
 import { D1Adapter } from "@grammyjs/storage-cloudflare";
 import { SessionData } from "../main";
+import { updateUserSubscribeHour } from "../lib/database/kv";
 
 
 const landingText =
@@ -28,9 +29,7 @@ const landingMenu = new Menu<Lezama>('landing')
         async (c, next) => {
             const session = await c.session
             let allSubscribersAtThisHour = await c.kv.read(`cron-${session.cronHour}`)
-            if (!allSubscribersAtThisHour || typeof allSubscribersAtThisHour !== "object") {
-                allSubscribersAtThisHour = {}
-            }
+
             if (!session.subscribed) {
                 allSubscribersAtThisHour[`${session.chatID}`] = true;
                 await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
@@ -93,17 +92,9 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                         const oldCronHour = session.cronHour
                         const newHour = (i - session.timezone + 24) % 24
                         session.cronHour = newHour
+                        
+                        await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cronHour)
 
-                        const allSubscribersAtOldHour = await c.kv.read(`cron-${oldCronHour}`)
-                        delete allSubscribersAtOldHour[`${session.chatID}`]
-                        await c.kv.write(`cron-${oldCronHour}`, allSubscribersAtOldHour)
-
-                        let allSubscribersAtNewHour = await c.kv.read[`cron-${session.cronHour}`]
-                        if(!allSubscribersAtNewHour){
-                            allSubscribersAtNewHour = {}
-                        }
-                        allSubscribersAtNewHour[`${session.chatID}`] = true
-                        await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtNewHour)
                         await c.editMessageText(await selectSubscribeHourText(c))
                     })
 

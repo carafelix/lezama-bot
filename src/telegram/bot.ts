@@ -11,7 +11,8 @@ import { composedFetch } from '../lib/database/mongo';
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
 import { Menu, MenuFlavor } from '@grammyjs/menu';
 import { D1Adapter, KvAdapter } from '@grammyjs/storage-cloudflare';
-import { SessionData, Mixin, Env, MongoResponse, AdminData } from '../main';
+import { SessionData, Mixin, Env, MongoResponse } from '../main';
+import { updateUserSubscribeHour } from '../lib/database/kv';
 
 export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor & Mixin;
 
@@ -91,20 +92,51 @@ async function getBot(env: Env) {
       const session = await c.session
       const offset = c.message?.text?.slice(3)
       if (offset) {
-        session.timezone = +offset
-        c.reply('Cambio de huso horario exitoso a UTC' + offset)
+        const oldRawHour = session.cronHour + session.timezone
+
+        session.timezone = (+offset)
+        session.cronHour = oldRawHour - (+offset)
+
+        await updateUserSubscribeHour(c, `${session.chatID}`, oldRawHour, session.cronHour)
+
+        await c.reply('Cambio de huso horario exitoso a UTC' + offset)
       }
     })
 
   bot.command("usercount", async (c: Lezama, next) => {
     if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
       let count = 0
-      for await (const user of c.kv.readAllKeys()) {
-        count++
+      for await (const hour of c.kv.readAllKeys()) {
+        const hourObj = c.kv.read(hour)
+        for(const user in hourObj){
+          count++
+        }
       }
-      await c.reply(
-        '' + count
-      )
+      await c.reply('' + count)
+    } else {
+      await next()
+    }
+  });
+
+  bot.command("sendusers", async (c: Lezama, next) => {
+    if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
+      const users = [333649403, 535051310, 680322324, 684009234, 509796651, 850586954, 6264283410, 1626370378, 1099402479, 1192564893, 922397011, 418886426, 616813418, 1271358823, 5782980509]
+    } else {
+      await next()
+    }
+  });
+
+  bot.command("updateusers", async (c: Lezama, next) => {
+    if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
+      const users = [333649403, 535051310, 680322324, 684009234, 509796651, 850586954, 6264283410, 1626370378, 1099402479, 1192564893, 922397011, 418886426, 616813418, 1271358823, 5782980509]
+      for(const user of users){
+        const userSession = await db_Sessions.read('' + user)
+        if(userSession?.cronHour !== undefined && userSession.subscribed){
+          const currCronHour = await c.kv.read(`cron-${userSession.cronHour}`)
+          currCronHour[`${user}`] = true
+          await c.kv.write(`cron-${userSession.cronHour}`,currCronHour)
+        }
+      }
     } else {
       await next()
     }

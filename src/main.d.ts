@@ -16,7 +16,7 @@ interface Env {
 
 interface Mixin{
   env: Env
-  kv: KvAdapter
+  kv: KvAdapter<any>
 }
 
 interface MongoResponse {
