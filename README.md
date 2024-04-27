@@ -1,2 +1,9 @@
+# Lezama - Telegram poetry bot 
 
-- for register the hour/minute into a cron job, ask the user for an hour and minute and just add that as a cron job,
+## to-do
+
+- add user session migration plugin: change chat ID from number to string
+- add command registration plugin: developer only commands.
+- add conversation plugin: 
+    - sending message to all user's of the bot with /sendusers
+    - add automatic timezone from user location
