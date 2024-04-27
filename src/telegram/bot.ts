@@ -14,8 +14,10 @@ import { Menu, MenuFlavor } from '@grammyjs/menu';
 import { D1Adapter, KvAdapter } from '@grammyjs/storage-cloudflare';
 import { SessionData, Mixin, Env, MongoResponse } from '../main';
 import { updateUserSubscribeHour } from '../lib/database/kv';
+import { CommandsFlavor } from "@grammyjs/commands";
+import userCommands from './commands';
 
-export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor & Mixin;
+export type Lezama = Context & SessionFlavor<SessionData> & MenuFlavor & CommandsFlavor  & Mixin;
 
 async function getBot(env: Env) {
 
@@ -29,6 +31,10 @@ async function getBot(env: Env) {
     c.kv = new KvAdapter<string>(env.KV_LEZAMA)
     await next();
   })
+
+  bot.use(userCommands)
+  
+  await userCommands.setCommands(bot)
 
   bot.use(lazySession({
     initial: () => ({
@@ -46,69 +52,22 @@ async function getBot(env: Env) {
 
   menus.forEach(menu => bot.use(menu.menu))
 
-  // Commands 
-
-  bot.command('start', async (c) => {
-    const session = await c.session
-    if (!session.chatID) session.chatID = c.chat.id;
-    await replyWithMenu(c, landing.text, landing.menu)
-  })
-
-  bot.command('help', async c => {
-    await c.reply(helpText)
-  })
-  bot.command('settings', async (c) => {
-    const session = await c.session
-    if(session.subscribed){
-      await replyWithMenu(c, settings.text, settings.menu)
-    } else {
-      await replyWithMenu(c, 'Te adelantas a tus propios pasos! Suscríbete primero :P', landing.menu)
-    }
-  })
-
-  bot.command('resetqueue', async c => {
-    const session = await c.session
-    session.queue = shuffleArray(session.allPoems.slice())
-    await c.reply('Cola reseteada')
-  })
-
-  bot.command('queueinfo', async c => {
-      const session = await c.session
-      await c.reply(await queueInfoText(c))
-  })
-
-  bot.command('randompoem', async (c) => {
-    const session = await c.session
-    const poem = await composedFetch(env, 'short-poems', 'findOne', {
-      filter: {
-        "_id": session.allPoems[rand(session.allPoems.length)]
-      }
-    }) as MongoResponse
-
-    if (poem) {
-      await c.reply(formatPoems(poem.document))
-    }
-  })
-
-  bot.command('info', async (c) => {
-    await replyWithMenu(c, info.text, info.menu)
-  })
-
+  // Should be a conversation 
   bot.hears(/^(GMT|UTC)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/,
-    async (c) => {
-      const session = await c.session
-      const offset = c.message?.text?.slice(3)
-      if (offset) {
-        const oldRawHour = session.cronHour + session.timezone
-
-        session.timezone = (+offset)
-        session.cronHour = oldRawHour - (+offset)
-
-        await updateUserSubscribeHour(c, `${session.chatID}`, oldRawHour, session.cronHour)
-
-        await c.reply('Cambio de huso horario exitoso a UTC' + offset)
-      }
-    })
+        async (c) => {
+          const session = await c.session
+          const offset = c.message?.text?.slice(3)
+          if (offset) {
+            const oldRawHour = session.cronHour + session.timezone
+    
+            session.timezone = (+offset)
+            session.cronHour = oldRawHour - (+offset)
+    
+            await updateUserSubscribeHour(c, `${session.chatID}`, oldRawHour, session.cronHour)
+    
+            await c.reply('Cambio de huso horario exitoso a UTC' + offset)
+          }
+        })
 
   bot.command("usercount", async (c: Lezama, next) => {
     if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
@@ -135,8 +94,3 @@ async function getBot(env: Env) {
 }
 
 export default getBot
-
-
-async function replyWithMenu(c: CommandContext<Lezama>, text: string, menu: Menu<Lezama> | InlineKeyboard) {
-  await c.reply(text, { parse_mode: "HTML", reply_markup: menu })
-}

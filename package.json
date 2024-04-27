@@ -17,6 +17,7 @@
     "wrangler": "^3.0.0"
   },
   "dependencies": {
+    "@grammyjs/commands": "^0.6.0",
     "@grammyjs/menu": "github:grammyjs/menu",
     "@grammyjs/storage-cloudflare": "^2.4.2",
     "grammy": "^1.22.4"
