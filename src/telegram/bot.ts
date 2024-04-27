@@ -107,7 +107,7 @@ async function getBot(env: Env) {
     if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
       let count = 0
       for await (const hour of c.kv.readAllKeys()) {
-        const hourObj = c.kv.read(hour)
+        const hourObj = await c.kv.read(hour)
         for(const user in hourObj){
           count++
         }
@@ -121,22 +121,6 @@ async function getBot(env: Env) {
   bot.command("sendusers", async (c: Lezama, next) => {
     if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
       const users = [333649403, 535051310, 680322324, 684009234, 509796651, 850586954, 6264283410, 1626370378, 1099402479, 1192564893, 922397011, 418886426, 616813418, 1271358823, 5782980509]
-    } else {
-      await next()
-    }
-  });
-
-  bot.command("updateusers", async (c: Lezama, next) => {
-    if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
-      const users = [333649403, 535051310, 680322324, 684009234, 509796651, 850586954, 6264283410, 1626370378, 1099402479, 1192564893, 922397011, 418886426, 616813418, 1271358823, 5782980509]
-      for(const user of users){
-        const userSession = await db_Sessions.read('' + user)
-        if(userSession?.cronHour !== undefined && userSession.subscribed){
-          const currCronHour = await c.kv.read(`cron-${userSession.cronHour}`)
-          currCronHour[`${user}`] = true
-          await c.kv.write(`cron-${userSession.cronHour}`,currCronHour)
-        }
-      }
     } else {
       await next()
     }
