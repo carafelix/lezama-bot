@@ -118,14 +118,6 @@ async function getBot(env: Env) {
     }
   });
 
-  bot.command("sendusers", async (c: Lezama, next) => {
-    if (`${c.from?.id}` === c.env.DEVELOPER_ID) {
-      const users = [333649403, 535051310, 680322324, 684009234, 509796651, 850586954, 6264283410, 1626370378, 1099402479, 1192564893, 922397011, 418886426, 616813418, 1271358823, 5782980509]
-    } else {
-      await next()
-    }
-  });
-
   // nothing else matched
   bot.on('message', c => c.reply('Qué estas buscando? Intenta usar /help'))
 
