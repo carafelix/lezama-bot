@@ -32,7 +32,9 @@ const landingMenu = new Menu<Lezama>('landing')
                 allSubscribersAtThisHour[`${session.chatID}`] = true;
                 await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
                 session.subscribed = true
-                await c.reply(`Welcome to the Paradiso. Tus poemas quedaron programados para las ${session.cronHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}, puedes cambiarlo en /settings`)
+
+                const displayHour = session.cronHour + session.timezone
+                await c.reply(`Welcome to the Paradiso. Tus poemas quedaron programados para las ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}, puedes cambiarlo en /settings`)
             }
             else {
                 delete allSubscribersAtThisHour[`${session.chatID}`]
@@ -73,7 +75,7 @@ Aquí podrás configurar:
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
     .submenu('Seleccionar hora', 'select-suscribe-hour-menu', async (c) => await c.editMessageText(await selectSubscribeHourText(c)))
-    .submenu('Configurar cola', 'config-queue', (c) => c.editMessageText(configQueueText, { parse_mode: 'HTML' })
+    .submenu('Configurar cola', 'config-queue', async (c) => c.editMessageText(await configQueueText(c), { parse_mode: 'HTML' })
     )
 
 const selectSubscribeHourText = async (c: Lezama) => {
@@ -112,10 +114,25 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
-const configQueueText =
-    `<b>Configura tu cola de poemas</b>
+const configQueueText = async (c: Lezama) => {
+    return (
+`<b>Configura tu cola de poemas</b>
 
-Por defecto incluye solo los poemas de menos de mil caracteres. Activando la opción de poemas largos incluye hasta el tope de 4096 caracteres.`
+Por defecto incluye solo los poemas de menos de mil caracteres. Activando la opción de poemas largos incluye hasta el tope de 4096 caracteres.
+
+Info de tu cola:
+${await queueInfoText(c)}
+`)
+}
+
+export const queueInfoText = async (c: Lezama) =>{
+    const session = await c.session
+    return (
+`Poemas por visitar: ${session.queue.length}.
+Poemas visitados: ${session.visited.length}.
+`)
+}
+
 const configQueueMenu = new Menu<Lezama>('config-queue')
     .text(async (c) => {
         const session = await c.session
@@ -138,6 +155,7 @@ const configQueueMenu = new Menu<Lezama>('config-queue')
                 )
             }
             c.menu.update()
+            c.editMessageText(await configQueueText(c),{parse_mode: 'HTML'})
         },
     )
     .back('Volver', async (c) => await c.editMessageText(settingsText, { parse_mode: 'HTML' }))

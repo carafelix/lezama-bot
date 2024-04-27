@@ -4,7 +4,8 @@ import {
   menus,
   helpText,
   info,
-  landing
+  landing,
+  queueInfoText
 } from './menus';
 import { shortiesIDs } from '../data/poemsIDs'
 import { composedFetch } from '../lib/database/mongo';
@@ -68,8 +69,14 @@ async function getBot(env: Env) {
   bot.command('resetqueue', async c => {
     const session = await c.session
     session.queue = shuffleArray(session.allPoems.slice())
-    await c.reply('Queue reset')
+    await c.reply('Cola reseteada')
   })
+
+  bot.command('queueinfo', async c => {
+      const session = await c.session
+      await c.reply(await queueInfoText(c))
+  })
+
   bot.command('randompoem', async (c) => {
     const session = await c.session
     const poem = await composedFetch(env, 'short-poems', 'findOne', {
