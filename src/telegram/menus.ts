@@ -54,10 +54,11 @@ export const landing = {
 
 
 export const helpText =
-`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
+`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando.
 /settings - Accede al menu de configuraciones, toggle poemas largos, libros, autores, ordenar tu cola, etc.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
+/queueinfo - Muestra información de tu cola de poemas.
 /resetqueue - Reinicia tu cola de poemas personal y la revuelve.
 /randompoem - Recibe un poema al azar de la colección.`
 
