@@ -57,3 +57,5 @@ type ExportedMenu = {
 interface AdminData {
   users: any // this is the currently subscribed users
 }
+
+type papi = Map<string>

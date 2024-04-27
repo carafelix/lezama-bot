@@ -35,7 +35,7 @@ async function getBot(env: Env) {
       allPoems: shortiesIDs,
       queue: shuffleArray(shortiesIDs),
       visited: [],
-      cronHour: 13,
+      cronHour: rand(24),
       timezone: -4,
       includeMiddies: false,
       subscribed: false

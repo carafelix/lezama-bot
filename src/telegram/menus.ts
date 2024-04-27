@@ -32,11 +32,13 @@ const landingMenu = new Menu<Lezama>('landing')
                 allSubscribersAtThisHour[`${session.chatID}`] = true;
                 await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
                 session.subscribed = true
+                await c.reply(`Welcome to the Paradiso. Tus poemas quedaron programados para las ${session.cronHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}, puedes cambiarlo en /settings`)
             }
             else {
                 delete allSubscribersAtThisHour[`${session.chatID}`]
                 await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
                 session.subscribed = false
+                await c.reply('Hasta la vista!')
             }
             c.menu.update()
         }
@@ -50,7 +52,7 @@ export const landing = {
 
 
 export const helpText =
-    `/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
+`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando y pincha 'Suscríbete'.
 /settings - Accede al menu de configuraciones, toggle poemas largos, libros, autores, ordenar tu cola, etc.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
