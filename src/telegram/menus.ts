@@ -1,9 +1,7 @@
 import { Menu } from "@grammyjs/menu";
 import { Lezama } from "./bot";
-import { rand, shuffleArray } from "../utils/utils";
-import { allIDs, shortiesIDs, middliesIDs } from "../data/poemsIDs";
-import { D1Adapter } from "@grammyjs/storage-cloudflare";
-import { SessionData } from "../main";
+import { shuffleArray } from "../utils/utils";
+import { allIDs, shortiesIDs } from "../data/poemsIDs";
 import { updateUserSubscribeHour } from "../lib/database/kv";
 
 
@@ -92,7 +90,7 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                         const oldCronHour = session.cronHour
                         const newHour = (i - session.timezone + 24) % 24
                         session.cronHour = newHour
-                        
+
                         await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cronHour)
 
                         await c.editMessageText(await selectSubscribeHourText(c))
@@ -164,25 +162,7 @@ Puedes encontrar el código fuente en Github, y si deseas contribuir o comunicar
 const infoMenu = new Menu<Lezama>('info-menu')
     .url('Contacto', 'https://t.me/BotGodMaster')
     .url('Github', 'https://github.com/carafelix/lezama-api').row()
-    .submenu("To-do's", 'todo-menu',
-        (c) => c.editMessageText(todoText, { parse_mode: 'HTML' }))
 
-
-const todoText =
-    `<b> To-do's</b>
-
-Quizá en un futuro lo integre dentro de Hono, un Web Framework ligero, para montarlo también a Discord e Instagram.
-
-Estoy pensando en quizá habilitar la posibilidad para que cada usuario pueda agregar poemas a su lista, me cuentan.
-Ahora que la database esta en D1, los poemas custom podrían guardarse en los datos de session.
-`
-const todo = new Menu<Lezama>('todo-menu')
-    .back('Volver',
-        (c) => c.editMessageText(infoText, { parse_mode: 'HTML' })
-    )
-
-
-infoMenu.register(todo)
 
 export const info = {
     menu: infoMenu,
