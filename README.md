@@ -7,4 +7,4 @@
 - add conversation plugin: 
     - sending message to all user's of the bot with /sendusers
     - add automatic timezone from user location
-- migrate kv Cron hour collections to Map, so it can store type and improve readability 
+- migrate kv cron hour objects collections to Map, so it can store type and improve readability 
