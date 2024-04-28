@@ -45,7 +45,7 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
           await bot.api.sendMessage(user, formatPoems(poem.document))
 
           userSession.poems.visited.push(poemID!)
-          enhancedSessions.write(user, userSession)
+          await enhancedSessions.write(user, userSession)
         }
 
         catch (err) {
