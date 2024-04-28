@@ -49,17 +49,17 @@ async function getBot(env: Env) {
   await userCommands.setCommands(bot)
 
   // Should be a conversation 
-  bot.hears(/^(GMT|UTC)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/,
+  bot.hears(/^(GMT|UTC|gmt|utc)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/,
     async (c) => {
       const session = await c.session
       const offset = c.message?.text?.slice(3)
       if (offset) {
-        const oldRawHour = session.cronHour + session.timezone
-
+        const oldCronHour = session.cronHour
+        const oldLocalHour = oldCronHour + session.timezone
         session.timezone = (+offset)
-        session.cronHour = oldRawHour - (+offset)
+        session.cronHour = oldLocalHour - (+offset)
 
-        await updateUserSubscribeHour(c, `${session.chatID}`, oldRawHour, session.cronHour)
+        await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cronHour)
 
         await c.reply('Cambio de huso horario exitoso a UTC' + offset)
       }
