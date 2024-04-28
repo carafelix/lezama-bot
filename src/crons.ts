@@ -2,9 +2,9 @@ import getBot from './telegram/bot';
 import { composedFetch } from './lib/database/mongo';
 import { formatPoems } from './utils/format-poems';
 import { shuffleArray } from './utils/shuffle-arr';
-import { rand } from './utils/utils';
-import { Env, SessionData, MongoResponse } from './main';
+import { Env, SessionData_v1, MongoResponse } from './main';
 import { D1Adapter, KvAdapter } from '@grammyjs/storage-cloudflare';
+import { Enhance } from 'grammy';
 
 export async function dispatchTelegram(e: ScheduledController, env: Env, c: ExecutionContext) {
   switch (e.cron) {
@@ -13,22 +13,23 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
       const currentHour = new Date(e.scheduledTime).getUTCHours()
 
       const subscribersAtThisHour = await new KvAdapter(env.KV_LEZAMA).read(`cron-${currentHour}`) as object
-      const db_Sessions = await D1Adapter.create<SessionData>(env.D1_LEZAMA, 'sessions')
+      const db_Sessions = await D1Adapter.create<Enhance<SessionData_v1>>(env.D1_LEZAMA, 'sessions')
 
       for (const user in subscribersAtThisHour) {
         try {
-          const userSession = await db_Sessions.read(user)
-          if (!userSession ||
-            !userSession.subscribed
+          const userSessionWrapper = await db_Sessions.read(user)
+          if (!userSessionWrapper ||
+            !userSessionWrapper.__d.subscribed
           ) {
             continue
           }
+          const userSession = userSessionWrapper.__d
 
-          let poemID = userSession.queue.shift()
+          let poemID = userSession.poems.queue.shift()
           if (!poemID) {
-            userSession.queue = shuffleArray(userSession.allPoems.slice())
-            poemID = userSession.queue.shift()
-            userSession.visited = []
+            userSession.poems.queue = shuffleArray(userSession.poems.all.slice())
+            poemID = userSession.poems.queue.shift()
+            userSession.poems.visited = []
           }
           const poem = await composedFetch(env, 'poems', 'findOne', {
             filter: {
@@ -37,8 +38,8 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
           }) as MongoResponse
           await bot.api.sendMessage(user, formatPoems(poem.document))
 
-          userSession.visited.push(poemID!)
-          db_Sessions.write(user, userSession)
+          userSession.poems.visited.push(poemID!)
+          db_Sessions.write(user, userSessionWrapper)
         }
 
         catch (err) {

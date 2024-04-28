@@ -49,7 +49,7 @@ userCommands.command('randompoem', 'Recibe un poema al azar de la colección.', 
     const session = await c.session
     const poem = await composedFetch(c.env, 'short-poems', 'findOne', {
         filter: {
-            "_id": session.allPoems[rand(session.allPoems.length)]
+            "_id": session.poems.all[rand(session.poems.all.length)]
         }
     }) as MongoResponse
 
