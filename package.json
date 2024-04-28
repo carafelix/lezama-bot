@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "deploy": "wrangler deploy && npm run deployWebhook ",
-    "dev": "concurrently -p '[{index}]-[{time}]' -t HH:mm:ss \"gnome-terminal --tab -- ngrok http 8080\" \"wrangler dev --test-scheduled\" \"sleep 5 && npm run devWebhook\"",
+    "deploy": "wrangler deploy && npm run webhookDeploy ",
+    "dev": "concurrently -p '[{index}]-[{time}]' -t HH:mm:ss \"gnome-terminal --tab -- ngrok http 8080\" \"wrangler dev --test-scheduled\" \"sleep 5 && npm run webhookDev\"",
     "webhookDev": "curl -s http://localhost:4040/api/tunnels/ | jq -r '.tunnels[0].public_url' | xargs -I {} sh -c 'BOT_TOKEN=$(cat ./.dev.vars | grep -o 'BOT_TOKEN=[^[:space:]]*' | cut -d '=' -f 2); curl -X GET https://api.telegram.org/bot${BOT_TOKEN}/setWebhook?url={}' | { cat; echo; }",
     "start": "wrangler dev",
     "testCron": "curl http://localhost:8080/__scheduled?cron=0+*+*+*+* | { cat; echo; }",

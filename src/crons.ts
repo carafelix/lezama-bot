@@ -4,7 +4,8 @@ import { formatPoems } from './utils/format-poems';
 import { shuffleArray } from './utils/shuffle-arr';
 import { Env, SessionData_v1, MongoResponse } from './main';
 import { D1Adapter, KvAdapter } from '@grammyjs/storage-cloudflare';
-import { Enhance } from 'grammy';
+import { Enhance, enhanceStorage } from 'grammy';
+import { reorganizeSections } from './telegram/migrations';
 
 export async function dispatchTelegram(e: ScheduledController, env: Env, c: ExecutionContext) {
   switch (e.cron) {
@@ -13,17 +14,22 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
       const currentHour = new Date(e.scheduledTime).getUTCHours()
 
       const subscribersAtThisHour = await new KvAdapter(env.KV_LEZAMA).read(`cron-${currentHour}`) as object
-      const db_Sessions = await D1Adapter.create<Enhance<SessionData_v1>>(env.D1_LEZAMA, 'sessions')
+      
+      const enhancedSessions = enhanceStorage({
+        storage: await D1Adapter.create<Enhance<SessionData_v1>>(env.D1_LEZAMA, 'sessions'),
+        migrations: {
+          1: reorganizeSections
+        }
+      })
 
       for (const user in subscribersAtThisHour) {
         try {
-          const userSessionWrapper = await db_Sessions.read(user)
-          if (!userSessionWrapper ||
-            !userSessionWrapper.__d.subscribed
+          const userSession = await enhancedSessions.read(user)
+          if (!userSession ||
+            !userSession.subscribed
           ) {
             continue
           }
-          const userSession = userSessionWrapper.__d
 
           let poemID = userSession.poems.queue.shift()
           if (!poemID) {
@@ -39,7 +45,7 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
           await bot.api.sendMessage(user, formatPoems(poem.document))
 
           userSession.poems.visited.push(poemID!)
-          db_Sessions.write(user, userSessionWrapper)
+          enhancedSessions.write(user, userSession)
         }
 
         catch (err) {
