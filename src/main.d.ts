@@ -14,7 +14,7 @@ interface Env {
   DEVELOPER_ID: string
 }
 
-interface Mixin{
+interface Mixin {
   env: Env
   kv: KvAdapter<any>
 }
@@ -38,20 +38,39 @@ interface BookDocument {
   author: string;
 }
 
-interface SessionData {
-  chatID: number,
+interface SessionData_v0 {
+  chatID: number
   allPoems: PoemDocument["_id"][]
+  queue: PoemDocument["_id"][]
+  visited: PoemDocument["_id"][]
+  cronHour: Date.getUTCHours
+  subscribed: boolean
+  timezone: number
+  includeMiddies: boolean
+}
+
+interface SessionData_v1 {
+  chatID: number,
+  poems: PoemsData
+  cron: cronData
+  subscribed: boolean
+}
+
+interface cronData {
+  hour: Date.getUTCHours,
+  minute: Date.getUTCMinutes,
+  timezoneOffset: number,
+}
+interface PoemsData {
+  all: PoemDocument["_id"][]
   queue: PoemDocument["_id"][],
   visited: PoemDocument["_id"][],
-  cronHour: Date.getUTCHours,
-  subscribed: boolean
-  timezone: number,
   includeMiddies: boolean,
 }
 
 type ExportedMenu = {
   menu: Menu<Lezama>
-  text: string;
+  text: string | (() => string);
 }
 
 interface AdminData {

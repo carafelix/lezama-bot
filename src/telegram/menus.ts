@@ -26,19 +26,19 @@ const landingMenu = new Menu<Lezama>('landing')
     },
         async (c, next) => {
             const session = await c.session
-            let allSubscribersAtThisHour = await c.kv.read(`cron-${session.cronHour}`)
+            let allSubscribersAtThisHour = await c.kv.read(`cron-${session.cron.hour}`)
 
             if (!session.subscribed) {
                 allSubscribersAtThisHour[`${session.chatID}`] = true;
-                await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
+                await c.kv.write(`cron-${session.cron.hour}`, allSubscribersAtThisHour)
                 session.subscribed = true
 
-                const displayHour = session.cronHour + session.timezone
-                await c.reply(`Welcome to the Paradiso. Tus poemas quedaron programados para las ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}, puedes cambiarlo en /settings`)
+                const displayHour = session.cron.hour + session.cron.timezoneOffset
+                await c.reply(`Welcome to the Paradiso. Tus poemas quedaron programados para las ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.cron.timezoneOffset >= 0 ? '+' + session.cron.timezoneOffset : '' + session.cron.timezoneOffset}, puedes cambiarlo en /settings`)
             }
             else {
                 delete allSubscribersAtThisHour[`${session.chatID}`]
-                await c.kv.write(`cron-${session.cronHour}`, allSubscribersAtThisHour)
+                await c.kv.write(`cron-${session.cron.hour}`, allSubscribersAtThisHour)
                 session.subscribed = false
                 await c.reply('Hasta la vista!')
             }
@@ -81,8 +81,8 @@ const settingsMenu = new Menu<Lezama>('settings-menu')
 
 const getSelectSubscribeHourText = async (c: Lezama) => {
     const session = await c.session
-    const displayHour = session.cronHour + session.timezone
-    return `Selecciona la hora a la que quieres recibir el diario placer. Actual: ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}.`
+    const displayHour = session.cron.hour + session.cron.timezoneOffset
+    return `Selecciona la hora a la que quieres recibir el diario placer. Actual: ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.cron.timezoneOffset >= 0 ? '+' + session.cron.timezoneOffset : '' + session.cron.timezoneOffset}.`
 }
 const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .dynamic((ctx, range) => {
@@ -92,11 +92,11 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
                     async (c) => {
                         const session = await c.session
 
-                        const oldCronHour = session.cronHour
-                        const newHour = (i - session.timezone + 24) % 24
-                        session.cronHour = newHour
+                        const oldCronHour = session.cron.hour
+                        const newHour = (i - session.cron.timezoneOffset + 24) % 24
+                        session.cron.hour = newHour
 
-                        await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cronHour)
+                        await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cron.hour)
 
                         await c.editMessageText(await getSelectSubscribeHourText(c))
                     })
@@ -129,30 +129,30 @@ ${await getQueueInfoText(c)}
 export const getQueueInfoText = async (c: Lezama) => {
     const session = await c.session
     return (
-        `Poemas por visitar: ${session.queue.length}.
-Poemas visitados: ${session.visited.length}.
+        `Poemas por visitar: ${session.poems.queue.length}.
+Poemas visitados: ${session.poems.visited.length}.
 `)
 }
 
 const configQueueMenu = new Menu<Lezama>('config-queue')
     .text(async (c) => {
         const session = await c.session
-        return !session.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos'
+        return !session.poems.includeMiddies ? 'Activar poemas largos' : 'Desactivar poemas largos'
     },
         async (c) => {
             const session = await c.session
-            if (!session.visited) session.visited = [];
+            if (!session.poems.visited) session.poems.visited = [];
 
-            session.includeMiddies = !session.includeMiddies
-            if (session.includeMiddies) {
-                session.allPoems = allIDs
-                session.queue = shuffleArray(
-                    allIDs.filter((id) => !session.visited.includes(id))
+            session.poems.includeMiddies = !session.poems.includeMiddies
+            if (session.poems.includeMiddies) {
+                session.poems.all = allIDs
+                session.poems.queue = shuffleArray(
+                    allIDs.filter((id) => !session.poems.visited.includes(id))
                 )
             } else {
-                session.allPoems = shortiesIDs
-                session.queue = shuffleArray(
-                    shortiesIDs.filter((id) => !session.visited.includes(id))
+                session.poems.all = shortiesIDs
+                session.poems.queue = shuffleArray(
+                    shortiesIDs.filter((id) => !session.poems.visited.includes(id))
                 )
             }
             c.menu.update()
@@ -195,14 +195,14 @@ const getResetQueueConfirmText = async (c: Lezama) => {
     const session = await c.session
     return (
         `Realmente quiere reiniciar tu cola?
-Aún te quedan ${session.queue.length} poemas por visitar.`
+Aún te quedan ${session.poems.queue.length} poemas por visitar.`
     )
 }
 
 const resetQueueConfirmMenu = new Menu<Lezama>('reset-queue-confirm')
     .text('Si', async (c) => {
         const session = await c.session
-        session.queue = shuffleArray(session.allPoems.slice())
+        session.poems.queue = shuffleArray(session.poems.all.slice())
         await c.reply('Cola reseteada')
     })
     .text('Mejor no', async (c) => {
