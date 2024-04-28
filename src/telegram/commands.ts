@@ -10,13 +10,12 @@ import {
 import { composedFetch } from '../lib/database/mongo';
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
 import { MongoResponse } from '../main';
-import { updateUserSubscribeHour } from '../lib/database/kv';
-import { CommandContext, InlineKeyboard } from "grammy";
+import { InlineKeyboard } from "grammy";
 import { Menu } from "@grammyjs/menu";
 
 
 
-const userCommands = new Commands<Lezama>();
+export const userCommands = new Commands<Lezama>();
 
 userCommands.command('start', 'Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando.', async (c) => {
     const session = await c.session
@@ -64,7 +63,10 @@ userCommands.command('info', 'Información relativa al bot mismo.', async (c) =>
     await replyWithMenu(c, info.text, info.menu)
 })
 
-export default userCommands 
+
+
+
+
 
 
 async function replyWithMenu(c: Lezama, text: string, menu: Menu<Lezama> | InlineKeyboard) {
