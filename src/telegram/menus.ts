@@ -54,7 +54,7 @@ export const landing = {
 
 
 export const helpText =
-`/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando.
+    `/start - Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando.
 /settings - Accede al menu de configuraciones, toggle poemas largos, libros, autores, ordenar tu cola, etc.
 /help - Lista los comandos disponibles.
 /info - Información relativa al bot mismo.
@@ -75,11 +75,11 @@ Aquí podrás configurar:
     - Ordenarla por fecha de publicación, por orden alfabético o en aleatorio.
 `;
 const settingsMenu = new Menu<Lezama>('settings-menu')
-    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', async (c) => await c.editMessageText(await selectSubscribeHourText(c)))
-    .submenu('Configurar cola', 'config-queue', async (c) => c.editMessageText(await configQueueText(c), { parse_mode: 'HTML' })
+    .submenu('Seleccionar hora', 'select-suscribe-hour-menu', async (c) => await c.editMessageText(await getSelectSubscribeHourText(c)))
+    .submenu('Configurar cola', 'config-queue', async (c) => c.editMessageText(await getConfigQueueText(c), { parse_mode: 'HTML' })
     )
 
-const selectSubscribeHourText = async (c: Lezama) => {
+const getSelectSubscribeHourText = async (c: Lezama) => {
     const session = await c.session
     const displayHour = session.cronHour + session.timezone
     return `Selecciona la hora a la que quieres recibir el diario placer. Actual: ${displayHour <= 0 ? displayHour + 24 : displayHour}:00, UTC${session.timezone >= 0 ? '+' + session.timezone : '' + session.timezone}.`
@@ -98,7 +98,7 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
 
                         await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cronHour)
 
-                        await c.editMessageText(await selectSubscribeHourText(c))
+                        await c.editMessageText(await getSelectSubscribeHourText(c))
                     })
 
             if (i % 4 == 0) {
@@ -115,21 +115,21 @@ const selectSubscribeHour = new Menu<Lezama>('select-suscribe-hour-menu')
     .back('Volver', (c) => c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
 
-const configQueueText = async (c: Lezama) => {
+const getConfigQueueText = async (c: Lezama) => {
     return (
-`<b>Configura tu cola de poemas</b>
+        `<b>Configura tu cola de poemas</b>
 
 Por defecto incluye solo los poemas de menos de mil caracteres. Activando la opción de poemas largos incluye hasta el tope de 4096 caracteres.
 
 Info de tu cola:
-${await queueInfoText(c)}
+${await getQueueInfoText(c)}
 `)
 }
 
-export const queueInfoText = async (c: Lezama) =>{
+export const getQueueInfoText = async (c: Lezama) => {
     const session = await c.session
     return (
-`Poemas por visitar: ${session.queue.length}.
+        `Poemas por visitar: ${session.queue.length}.
 Poemas visitados: ${session.visited.length}.
 `)
 }
@@ -156,13 +156,14 @@ const configQueueMenu = new Menu<Lezama>('config-queue')
                 )
             }
             c.menu.update()
-            c.editMessageText(await configQueueText(c),{parse_mode: 'HTML'})
+            c.editMessageText(await getConfigQueueText(c), { parse_mode: 'HTML' })
         },
     )
+    .submenu('Resetear cola', 'reset-queue-confirm', async (c) => c.editMessageText(await getResetQueueConfirmText(c)))
+    .row()
     .back('Volver', async (c) => await c.editMessageText(settingsText, { parse_mode: 'HTML' }))
 
-settingsMenu.register(selectSubscribeHour)
-settingsMenu.register(configQueueMenu)
+
 
 export const settings = {
     menu: settingsMenu,
@@ -190,5 +191,33 @@ export const info = {
     text: infoText
 }
 
-export const menus = [settings, info, landing]
+const getResetQueueConfirmText = async (c: Lezama) => {
+    const session = await c.session
+    return (
+        `Realmente quiere reiniciar tu cola?
+Aún te quedan ${session.queue.length} poemas por visitar.`
+    )
+}
+
+const resetQueueConfirmMenu = new Menu<Lezama>('reset-queue-confirm')
+    .text('Si', async (c) => {
+        const session = await c.session
+        session.queue = shuffleArray(session.allPoems.slice())
+        await c.reply('Cola reseteada')
+    })
+    .text('Mejor no', async (c) => {
+        c.menu.close()
+        await c.editMessageText('Sabia decisión.')
+    })
+
+export const resetQueue = {
+    menu: resetQueueConfirmMenu,
+    text: getResetQueueConfirmText
+}
+
+settingsMenu.register(selectSubscribeHour)
+settingsMenu.register(configQueueMenu)
+configQueueMenu.register(resetQueueConfirmMenu)
+
+export const menus = [settings, info, landing, resetQueue]
 

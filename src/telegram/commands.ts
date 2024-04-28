@@ -5,7 +5,8 @@ import {
     helpText,
     info,
     landing,
-    queueInfoText
+    getQueueInfoText,
+    resetQueue
 } from './menus';
 import { composedFetch } from '../lib/database/mongo';
 import { formatPoems, shuffleArray, rand } from '../utils/utils';
@@ -36,14 +37,12 @@ userCommands.command('settings', 'Accede al menu de configuraciones, toggle poem
 })
 
 userCommands.command('resetqueue', 'Reinicia tu cola de poemas personal y la revuelve.', async c => {
-    const session = await c.session
-    session.queue = shuffleArray(session.allPoems.slice())
-    await c.reply('Cola reseteada')
+    await replyWithMenu(c, await resetQueue.text(c), resetQueue.menu )
 })
 
 userCommands.command('queueinfo', 'Muestra información de tu cola de poemas.', async c => {
     const session = await c.session
-    await c.reply(await queueInfoText(c))
+    await c.reply(await getQueueInfoText(c))
 })
 
 userCommands.command('randompoem', 'Recibe un poema al azar de la colección.', async (c) => {

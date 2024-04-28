@@ -1,4 +1,4 @@
-import { Bot, CommandContext, Context, SessionFlavor, lazySession } from 'grammy';
+import { Bot, Context, SessionFlavor, lazySession } from 'grammy';
 import {
   menus
 } from './menus';
