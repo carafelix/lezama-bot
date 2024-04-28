@@ -12,9 +12,7 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
     case "0 * * * *":
       const bot = await getBot(env)
       const currentHour = new Date(e.scheduledTime).getUTCHours()
-
       const subscribersAtThisHour = await new KvAdapter(env.KV_LEZAMA).read(`cron-${currentHour}`) as object
-      
       const enhancedSessions = enhanceStorage({
         storage: await D1Adapter.create<Enhance<SessionData_v1>>(env.D1_LEZAMA, 'sessions'),
         migrations: {
@@ -30,7 +28,6 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
           ) {
             continue
           }
-
           let poemID = userSession.poems.queue.shift()
           if (!poemID) {
             userSession.poems.queue = shuffleArray(userSession.poems.all.slice())
@@ -47,7 +44,6 @@ export async function dispatchTelegram(e: ScheduledController, env: Env, c: Exec
           userSession.poems.visited.push(poemID!)
           await enhancedSessions.write(user, userSession)
         }
-
         catch (err) {
           console.trace(err);
         }

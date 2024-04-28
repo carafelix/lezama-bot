@@ -21,7 +21,7 @@ async function getBot(env: Env) {
 
   const bot = new Bot<Lezama>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
   const sessionsDB = await D1Adapter.create<Enhance<SessionData_v1>>(env.D1_LEZAMA, 'sessions')
-
+  
   // middleware install, be careful, order matters.
 
   bot.use(async (c, next) => {
@@ -69,12 +69,13 @@ async function getBot(env: Env) {
       const session = await c.session
       const offset = c.message?.text?.slice(3)
       if (offset) {
-        const oldRawHour = session.cron.hour + session.cron.timezoneOffset
+        const oldCronHour = session.cron.hour
+        const oldRawHour = oldCronHour + session.cron.timezoneOffset
 
         session.cron.timezoneOffset = (+offset)
         session.cron.hour = oldRawHour - (+offset)
 
-        await updateUserSubscribeHour(c, `${session.chatID}`, oldRawHour, session.cron.hour)
+        await updateUserSubscribeHour(c, `${session.chatID}`, oldCronHour, session.cron.hour)
 
         await c.reply('Cambio de huso horario exitoso a UTC' + offset)
       }
