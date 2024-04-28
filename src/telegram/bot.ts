@@ -96,16 +96,6 @@ async function getBot(env: Env) {
     }
   });
 
-  bot.command("papi", async (c: Lezama, next) => {
-    const session = await c.session
-    if (`${(c.chat?.id || session.chatID)}` === c.env.DEVELOPER_ID) {
-      console.log(session)
-    } else {
-      await next()
-    }
-  })
-
-
   // nothing else matched
   bot.on('message', c => c.reply('Qué estas buscando? Intenta usar /help'))
 
