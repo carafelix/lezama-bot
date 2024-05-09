@@ -21,7 +21,7 @@ async function getBot(env: Env) {
 
   const bot = new Bot<Lezama>(env.BOT_TOKEN, { botInfo: JSON.parse(env.BOT_INFO) })
   const sessionsDB = await D1Adapter.create<Enhance<SessionData_v1>>(env.D1_LEZAMA, 'sessions')
-  
+
   // middleware install, be careful, order matters.
 
   bot.use(async (c, next) => {
@@ -63,7 +63,7 @@ async function getBot(env: Env) {
   bot.use(userCommands)
   await userCommands.setCommands(bot)
 
-  // Should be a conversation 
+  // Should be a conversation
   bot.hears(/^(GMT|UTC|gmt|utc)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/,
     async (c) => {
       const session = await c.session

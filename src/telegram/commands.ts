@@ -18,7 +18,7 @@ import { Menu } from "@grammyjs/menu";
 
 export const userCommands = new Commands<Lezama>();
 
-userCommands.command('start', 'Inicia el bot. Si algo no funciona bien, vuelve a tirar este comando.', async (c) => {
+userCommands.command('start', 'Inicia el bot. Si algo no funciona bien, vuelve a tirar, este comando.', async (c) => {
     const session = await c.session
     if (!session.chatID) session.chatID = c.chat.id;
     await replyWithMenu(c, landing.text, landing.menu)
