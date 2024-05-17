@@ -2,14 +2,15 @@
 
 ## to-do
 
-- add poem initial/reset retrieval from database instead of json
-- add user session migration plugin:
+- [x] add poem initial/reset retrieval from database instead of json
+- [x] add user session migration plugin:
     - change chat ID from number to string
-- add command registration plugin: developer only commands.
+- [x] add command registration plugin: developer only commands.
 - add conversation plugin:
     - sending message to all user's of the bot with /sendusers
-    - add automatic timezone from user location
-- the current dispatch trigger it's only handled by 1 worker, 1 instance of the bot. If at some point it gets to the point where handling the amount of users per certain hour surpass the [free threshold](https://developers.cloudflare.com/workers/platform/limits/). Instead of an iterative single dispatch, [push to a LavinMQ queue](https://jaragua.lmq.cloudamqp.com/docs/#tag/exchanges/operation/PostExchangePublish) or [use valkey)](https://valkey.io/) the users id's that need poem delivery, in chunks, and make cron jobs that consume that queue. This process can be further auto-scale via the following recursive-like method, inside the cronjob handler:
+    - add automatic timezone from user location.
+	- Date.now()
+- the current dispatch trigger it's only handled by 1 worker, 1 instance of the bot. If at some point it gets to the point where handling the amount of users per certain hour surpass the [free threshold](https://developers.cloudflare.com/workers/platform/limits/). Instead of an iterative single dispatch, [push to a LavinMQ queue](https://jaragua.lmq.cloudamqp.com/docs/#tag/exchanges/operation/PostExchangePublish) or [use valkey or redis)](https://valkey.io/) the users id's that need poem delivery, in chunks, and make cron jobs that consume that queue. This process can be further auto-scale via the following recursive-like method, inside the cronjob handler:
     ```pseudocode
     1.- if users in this cron hour > the amount of users that a single worker instance can handle:
         1.1.- split the users in two
