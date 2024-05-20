@@ -97,8 +97,8 @@ async function getBot(env: Env) {
     }
   });
 
-  // nothing else matched
-  bot.on('message', c => c.reply('Qué estas buscando? Intenta usar /help'))
+	// nothing else matched
+	bot.on('msg:text', c => c.reply('Qué estas buscando? Intenta usar /help'))
 
   // error handle
   bot.catch((err) => { console.log('\n\nError:\n\n'); console.trace(err) })
