@@ -20,6 +20,7 @@
     "@grammyjs/commands": "^0.6.0",
     "@grammyjs/menu": "github:grammyjs/menu",
     "@grammyjs/storage-cloudflare": "^2.4.2",
+    "dedent": "^1.5.3",
     "grammy": "^1.22.4"
   }
 }

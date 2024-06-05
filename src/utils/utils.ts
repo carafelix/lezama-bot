@@ -1,9 +1,9 @@
-import { formatPoems } from './format-poems';
-import { shuffleArray } from './shuffle-arr';
+import { formatPoems } from "./format-poems";
+import { shuffleArray } from "./shuffle-arr";
 
-export { formatPoems }
-export { shuffleArray }
-export { rand }
+export { formatPoems };
+export { shuffleArray };
+export { rand };
 
 /**
  * returns a random whole number between 0 and n-1 ()
@@ -11,5 +11,5 @@ export { rand }
  * @returns number
  */
 function rand(n: number) {
-    return Math.floor(Math.random() * n)
+  return Math.floor(Math.random() * n);
 }
