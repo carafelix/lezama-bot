@@ -1,13 +1,13 @@
 //#region imports
 import {
-  Bot,
-  Context,
-  Enhance,
-  enhanceStorage,
-  lazySession,
-  LazySessionFlavor,
-  MiddlewareFn,
-  SessionFlavor,
+	Bot,
+	Context,
+	Enhance,
+	enhanceStorage,
+	lazySession,
+	LazySessionFlavor,
+	MiddlewareFn,
+	SessionFlavor,
 } from "grammy";
 import { menus } from "./menus";
 import { shortiesIDs } from "../data/poemsIDs";
@@ -23,119 +23,119 @@ import { addNewPoems, reorganizeSections } from "./migrations";
 
 // should separate context's, since, for ex, MenuFlavor is not used outside it's scope
 export type Lezama =
-  & Context
-  & LazySessionFlavor<SessionData_v1>
-  & MenuFlavor
-  & CommandsFlavor<Lezama>
-  & Mixin;
+	& Context
+	& LazySessionFlavor<SessionData_v1>
+	& MenuFlavor
+	& CommandsFlavor<Lezama>
+	& Mixin;
 
 async function getBot(env: Env) {
-  const bot = new Bot<Lezama>(env.BOT_TOKEN, {
-    botInfo: JSON.parse(env.BOT_INFO),
-  });
-  const sessionsDB = await D1Adapter.create<Enhance<SessionData_v1>>(
-    env.D1_LEZAMA,
-    "sessions",
-  );
+	const bot = new Bot<Lezama>(env.BOT_TOKEN, {
+		botInfo: JSON.parse(env.BOT_INFO),
+	});
+	const sessionsDB = await D1Adapter.create<Enhance<SessionData_v1>>(
+		env.D1_LEZAMA,
+		"sessions",
+	);
 
-  // middleware install, be careful, order matters.
+	// middleware install, be careful, order matters.
 
-  bot.use(async (c, next) => {
-    c.env = env;
-    c.kv = new KvAdapter(env.KV_LEZAMA);
-    await next();
-  });
+	bot.use(async (c, next) => {
+		c.env = env;
+		c.kv = new KvAdapter(env.KV_LEZAMA);
+		await next();
+	});
 
-  bot.use(lazySession({
-    initial: () =>
-      ({
-        chatID: 0,
-        poems: {
-          all: shortiesIDs,
-          queue: shuffleArray(shortiesIDs),
-          visited: [],
-          includeMiddies: false,
-        },
-        cron: {
-          hour: rand(24),
-          minute: 0,
-          timezoneOffset: -4,
-        },
-        subscribed: false,
-      }) as SessionData_v1,
-    storage: enhanceStorage({
-      storage: sessionsDB,
-      migrations: {
-        1: reorganizeSections,
-        2: addNewPoems,
-      },
-    }),
-  }));
+	bot.use(lazySession({
+		initial: () =>
+			({
+				chatID: 0,
+				poems: {
+					all: shortiesIDs,
+					queue: shuffleArray(shortiesIDs),
+					visited: [],
+					includeMiddies: false,
+				},
+				cron: {
+					hour: rand(24),
+					minute: 0,
+					timezoneOffset: -4,
+				},
+				subscribed: false,
+			}) as SessionData_v1,
+		storage: enhanceStorage({
+			storage: sessionsDB,
+			migrations: {
+				1: reorganizeSections,
+				2: addNewPoems,
+			},
+		}),
+	}));
 
-  bot.use(commands());
+	bot.use(commands());
 
-  // menu install
-  menus.forEach((menu) => bot.use(menu.menu));
+	// menu install
+	menus.forEach((menu) => bot.use(menu.menu));
 
-  // commands install
-  bot.use(userCommands);
-  await userCommands.setCommands(bot);
+	// commands install
+	bot.use(userCommands);
+	await userCommands.setCommands(bot);
 
-  // Should be a conversation
-  bot.hears(
-    /^(GMT|UTC|gmt|utc)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/,
-    async (c) => {
-      const session = await c.session;
-      const offset = c.message?.text?.slice(3);
-      if (offset) {
-        const oldCronHour = session.cron.hour;
-        const oldRawHour = oldCronHour + session.cron.timezoneOffset;
+	// Should be a conversation
+	bot.hears(
+		/^(GMT|UTC|gmt|utc)([+-][0-9]|[+-]1[0-2]|[+]1[2-4])$/,
+		async (c) => {
+			const session = await c.session;
+			const offset = c.message?.text?.slice(3);
+			if (offset) {
+				const oldCronHour = session.cron.hour;
+				const oldRawHour = oldCronHour + session.cron.timezoneOffset;
 
-        session.cron.timezoneOffset = +offset;
-        session.cron.hour = oldRawHour - (+offset);
+				session.cron.timezoneOffset = +offset;
+				session.cron.hour = oldRawHour - (+offset);
 
-        await updateUserSubscribeHour(
-          c,
-          `${session.chatID}`,
-          oldCronHour,
-          session.cron.hour,
-        );
+				await updateUserSubscribeHour(
+					c,
+					`${session.chatID}`,
+					oldCronHour,
+					session.cron.hour,
+				);
 
-        await c.reply("Cambio de huso horario exitoso a UTC" + offset);
-      }
-    },
-  );
+				await c.reply("Cambio de huso horario exitoso a UTC" + offset);
+			}
+		},
+	);
 
-  bot.command("usercount", async (c: Lezama, next) => {
-    const session = await c.session;
-    if (`${(c.chat?.id || session.chatID)}` === c.env.DEVELOPER_ID) {
-      let count = 0;
-      for await (const hour of c.kv.readAllKeys()) {
-        const hourObj = await c.kv.read(hour);
-        for (const user in hourObj) {
-          count++;
-        }
-      }
-      await c.reply("", {});
-    } else {
-      await next();
-    }
-  });
+	bot.command("usercount", async (c: Lezama, next) => {
+		const session = await c.session;
+		if (`${(c.chat?.id || session.chatID)}` === c.env.DEVELOPER_ID) {
+			let count = 0;
+			for await (const hour of c.kv.readAllKeys()) {
+				const hourObj = await c.kv.read(hour);
+				for (const user in hourObj) {
+					count++;
+				}
+			}
+			await c.reply("", {});
+		} else {
+			await next();
+		}
+	});
 
-  // nothing else matched
-  bot.on("msg:text", (c) => {
-    if (c.from?.id !== +c.env.DEVELOPER_ID) {
-      c.reply("Qué estas buscando? Intenta usar /help");
-    }
-  });
+	// nothing else matched
+	bot.on("msg:text", (c) => {
+		if (c.from?.id !== +c.env.DEVELOPER_ID) {
+			c.reply("Qué estas buscando? Intenta usar /help");
+		}
+	});
 
-  // error handle
-  bot.catch((err) => {
-    console.log("\n\nError:\n\n");
-    console.trace(err);
-  });
+	// error handle
+	bot.catch((err) => {
+		console.log("\n\nError:\n\n");
+		console.trace(err);
+	});
 
-  return bot;
+	return bot;
 }
 
 export default getBot;
