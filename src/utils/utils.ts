@@ -11,5 +11,5 @@ export { rand };
  * @returns number
  */
 function rand(n: number) {
-	return Math.floor(Math.random() * n);
+  return Math.floor(Math.random() * n);
 }
