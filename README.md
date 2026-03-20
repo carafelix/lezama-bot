@@ -1,6 +1,7 @@
 <div align="center">
 	<h1>Lezama - Telegram Poetry bot</h1>
 	<h2><em>Retrocedo hasta el borde de la piedra</em></h2>
+	<p>MongoDB Broken, must reactive space</p>
 	<img src="./imgs/lezama.gif" width="750">
 </div>
 </br>
