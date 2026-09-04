@@ -238,6 +238,7 @@ const resetQueueConfirmMenu = new Menu<Lezama>("reset-queue-confirm")
   .text("Si", async (c) => {
     const session = await c.session;
     session.poems.queue = shuffleArray(session.poems.all.slice());
+    session.poems.visited = [];
     await c.reply("Cola reseteada");
   })
   .text("Mejor no", async (c) => {
