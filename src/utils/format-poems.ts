@@ -5,7 +5,7 @@ export function formatPoems(poem: Poem, chunk?: number) {
   const year = poem.year ? ` (${poem.year})` : "";
 
   return (
-    `${titleChain[1]} ${titleChain[2] ? titleChain[2] : ''}
+    `${titleChain[1].toUpperCase()} ${titleChain[2] ? titleChain[2].toUpperCase() : ''}
 
 ${poem.text}
 
