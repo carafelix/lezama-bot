@@ -1,6 +1,6 @@
 import { KVNamespace } from "@cloudflare/workers-types";
 import { D1Adapter, KvAdapter } from "@grammyjs/storage-cloudflare";
-interface Env {
+export interface Env {
   BOT_TOKEN: string;
   BOT_INFO: string;
   D1_LEZAMA: D1Database;
@@ -8,12 +8,12 @@ interface Env {
   DEVELOPER_ID: string;
 }
 
-interface Mixin {
+export interface Mixin {
   env: Env;
   kv: KvAdapter<any>;
 }
 
-interface Poem {
+export interface Poem {
   id: number;
   titleChain: string[];
   text: string;
@@ -21,7 +21,7 @@ interface Poem {
   length: number;
 }
 
-interface SessionData_v0 {
+export interface SessionData_v0 {
   chatID: number;
   allPoems: number[];
   queue: number[];
@@ -32,19 +32,19 @@ interface SessionData_v0 {
   includeMiddies: boolean;
 }
 
-interface SessionData_v1 {
+export interface SessionData_v1 {
   chatID: number;
   poems: PoemsData;
   cron: cronData;
   subscribed: boolean;
 }
 
-interface cronData {
+export interface cronData {
   hour: Date.getUTCHours;
   minute: Date.getUTCMinutes;
   timezoneOffset: number;
 }
-interface PoemsData {
+export interface PoemsData {
   all: number[];
   queue: number[];
   visited: number[];
