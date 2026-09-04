@@ -3,12 +3,6 @@ import { D1Adapter, KvAdapter } from "@grammyjs/storage-cloudflare";
 interface Env {
   BOT_TOKEN: string;
   BOT_INFO: string;
-  MONGO_CONNECT: string;
-  MONGO_API_KEY: string;
-  MONGO_API_ENDPOINT: string;
-  MONGO_APP_ID: string;
-  FREE_STORAGE_TOKEN: string;
-  ADMIN_DATA_KEY: string;
   D1_LEZAMA: D1Database;
   KV_LEZAMA: KVNamespace;
   DEVELOPER_ID: string;
@@ -19,30 +13,19 @@ interface Mixin {
   kv: KvAdapter<any>;
 }
 
-interface MongoResponse {
-  document: PoemDocument;
-}
-
-interface PoemDocument {
-  _id: number;
-  book: BookDocument;
-  title: string;
+interface Poem {
+  id: number;
+  titleChain: string[];
   text: string;
+  year: string | null;
   length: number;
-  multiline?: boolean;
-}
-
-interface BookDocument {
-  title: string;
-  publishYear: number;
-  author: string;
 }
 
 interface SessionData_v0 {
   chatID: number;
-  allPoems: PoemDocument["_id"][];
-  queue: PoemDocument["_id"][];
-  visited: PoemDocument["_id"][];
+  allPoems: number[];
+  queue: number[];
+  visited: number[];
   cronHour: Date.getUTCHours;
   subscribed: boolean;
   timezone: number;
@@ -62,9 +45,9 @@ interface cronData {
   timezoneOffset: number;
 }
 interface PoemsData {
-  all: PoemDocument["_id"][];
-  queue: PoemDocument["_id"][];
-  visited: PoemDocument["_id"][];
+  all: number[];
+  queue: number[];
+  visited: number[];
   includeMiddies: boolean;
 }
 
@@ -73,9 +56,6 @@ type ExportedMenu = {
   text: string | (() => string);
 };
 
-interface AdminData {
-  users: Record<string, object>; // this is the currently subscribed users
-}
 type Hour =
   | 0
   | 1

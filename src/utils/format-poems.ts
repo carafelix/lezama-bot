@@ -1,14 +1,15 @@
-import { PoemDocument } from "../main";
+import { Poem } from "../main";
 
-export function formatPoems(poem: PoemDocument, chunk?: number) {
+export function formatPoems(poem: Poem, chunk?: number) {
+  const titleChain = poem.titleChain;
+  const year = poem.year ? ` (${poem.year})` : "";
+
   return (
-    `${poem.title}
+    `${titleChain.join(", ")}
 
 ${poem.text}
 
-        ${poem.book.author} — ${poem.book.title} ${
-      poem.book.publishYear ? `(${poem.book.publishYear})` : ""
-    }
+        José Lezama Lima — ${titleChain[0]}${year}
 `
   );
 }

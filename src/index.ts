@@ -8,6 +8,7 @@ export default {
     let response = new Response("Bot initialization failed or... who are you?");
     try {
       const bot = await getBot(env);
+			console.log(bot)
       response = await webhookCallback(bot, "cloudflare-mod")(req);
     } catch (err) {
       console.log(err);

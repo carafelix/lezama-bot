@@ -8,11 +8,10 @@ import {
   resetQueue,
   settings,
 } from "./menus";
-import { composedFetch } from "../lib/database/mongo";
-import { formatPoems, rand } from "../utils/utils";
-import { MongoResponse } from "../main";
+import { formatPoems } from "../utils/utils";
 import { InlineKeyboard } from "grammy";
 import { Menu } from "@grammyjs/menu";
+import { getRandomPoem } from "../data/poems";
 
 export const userCommands = new Commands<Lezama>();
 
@@ -68,14 +67,10 @@ userCommands.command(
   "Recibe un poema al azar de la colección.",
   async (c) => {
     const session = await c.session;
-    const poem = await composedFetch(c.env, "short-poems", "findOne", {
-      filter: {
-        "_id": session.poems.all[rand(session.poems.all.length)],
-      },
-    }) as MongoResponse;
+    const poem = await getRandomPoem();
 
     if (poem) {
-      await c.reply(formatPoems(poem.document));
+      await c.reply(formatPoems(poem));
     }
   },
 );

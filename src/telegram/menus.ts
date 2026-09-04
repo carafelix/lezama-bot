@@ -214,6 +214,8 @@ El telegram bot framework es Grammy, el cual cuenta con muy buena documentación
 Para el hosting de los poemas usa MongoDB Atlas. Para el hosting de la data de sesión usa una database SQL, D1, de Cloudflare, en conjunto con KV, un sistema de almacenamiento rápido, también de Cloudflare, para chequear los usuarios con suscripción activa.
 
 Puedes encontrar el código fuente en Github, y si deseas contribuir o comunicarme alguna idea, me puedes contactar al telegram en 'Contacto' o abrir un Issue en Github.
+
+v2.0.0
 `;
 const infoMenu = new Menu<Lezama>("info-menu")
   .url("Contacto", "https://t.me/BotGodMaster")

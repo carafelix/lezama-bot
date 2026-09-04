@@ -1,11 +1,11 @@
 import getBot from "./telegram/bot";
-import { composedFetch } from "./lib/database/mongo";
 import { formatPoems } from "./utils/format-poems";
 import { shuffleArray } from "./utils/shuffle-arr";
-import { Env, MongoResponse, SessionData_v1 } from "./main";
+import { Env, SessionData_v1, Poem } from "./main";
 import { D1Adapter, KvAdapter } from "@grammyjs/storage-cloudflare";
 import { Enhance, enhanceStorage } from "grammy";
 import { addNewPoems, reorganizeSections } from "./telegram/migrations";
+import { getPoem } from "./data/poems";
 
 export async function dispatchTelegram(
   e: ScheduledController,
@@ -47,12 +47,8 @@ export async function dispatchTelegram(
             poemID = userSession.poems.queue.shift();
             userSession.poems.visited = [];
           }
-          const poem = await composedFetch(env, "poems", "findOne", {
-            filter: {
-              "_id": poemID,
-            },
-          }) as MongoResponse;
-          await bot.api.sendMessage(user, formatPoems(poem.document));
+          const poem: Poem = await getPoem(poemID!)!;
+          await bot.api.sendMessage(user, formatPoems(poem));
 
           userSession.poems.visited.push(poemID!);
           await enhancedSessions.write(user, userSession);
