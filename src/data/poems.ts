@@ -19,8 +19,6 @@ export const middliesIDs = poemsJSON
   .filter((p) => p.length >= 1000 && p.length <= 3500)
   .map((p) => p.id);
 
-export const allIDs = poemsJSON.map((p) => p.id);
-
 export function getRandomPoem(): Poem {
   const ids = shortiesIDs.concat(middliesIDs)
   const randomIndex = Math.floor(Math.random() * ids.length);
